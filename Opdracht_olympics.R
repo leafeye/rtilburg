@@ -1,5 +1,4 @@
-## Levi Pols
-## u320513
+
 
 ## Load packages ---------------------------------------------------------------
 library(dplyr)
@@ -8,67 +7,64 @@ library(ggplot2)
 ## Load data -------------------------------------------------------------------
 olympics <- read.delim("input/olympics.txt", stringsAsFactors = FALSE)
 
-## Question 1 -----------------------------------------------------------------
+## Vraag 1 -----------------------------------------------------------------
 wrestling <- olympics %>%
   filter(Sport == "Wrestling") %>%
   arrange(desc(Year), Event, Name)
 
-answer1 <- wrestling
 
-## Question 2 -----------------------------------------------------------------
+
+## Vraag 2 -----------------------------------------------------------------
 olympic_prize <- olympics %>%
   mutate(Prize = ifelse(is.na(Medal), FALSE, TRUE) )
 
-answer2 <- olympic_prize
 
-## Question 3 -----------------------------------------------------------------
+## Vraag 3 -----------------------------------------------------------------
 sex_season_sports <- olympics %>%
   group_by(Sex, Season) %>%
   summarize(Num_Sports = n_distinct(Sport)) %>%
   rename(Competitor_Sex = Sex, Olympic_Season = Season)
 
-answer3 <- sex_season_sports
 
-## Question 4 -----------------------------------------------------------------
+## Vraag 4 -----------------------------------------------------------------
 thousand_meters <- olympics %>%
   filter(grepl("1,000 metres", Event))
   
-answer4 <- thousand_meters
 
-## Question 5 -----------------------------------------------------------------
-answer5 <- ggplot(data = olympics, aes(x = Age)) +
+## Vraag 5 -----------------------------------------------------------------
+ggplot(data = olympics, aes(x = Age)) +
   geom_histogram(binwidth = 5, fill = "darksalmon")
 
-## Question 6 -----------------------------------------------------------------
-answer6 <- ggplot(data = olympics, aes(x = Height, y = Weight, color = Sex)) +
+## Vraag 6 -----------------------------------------------------------------
+ggplot(data = olympics, aes(x = Height, y = Weight, color = Sex)) +
   geom_point() +
   scale_y_continuous(name = "Weight (kg)") +
   scale_x_continuous(name = "Height (cm)")
 
-## Question 7 -----------------------------------------------------------------
-answer7 <- ggplot(data = olympics, aes(x = Sex, y = Weight, color = Sex)) +
+## Vraag 7 -----------------------------------------------------------------
+ggplot(data = olympics, aes(x = Sex, y = Weight, color = Sex)) +
   geom_boxplot(outlier.shape = NA) +
   scale_color_manual(values = c("pink", "blue")) 
 
-## Question 8 -----------------------------------------------------------------
-answer8 <- olympics %>%
+## Vraag 8 -----------------------------------------------------------------
+olympics %>%
   group_by(Season, Year = as.factor(Year)) %>%
   summarize(count = n()) %>%
   ggplot(aes(x = Season, y = count, fill = Year)) +
   geom_bar(stat = "identity", position = "dodge")
   
-## Question 9 -----------------------------------------------------------------
-bmi_sport <- olympics %>%
+## Vraag 9 -----------------------------------------------------------------
+olympics %>%
   mutate(BMI = Weight / (Height / 100) ^ 2) %>% 
   group_by(Sport) %>%
   summarize(Mean_BMI = mean(BMI)) %>%
   top_n(5, Mean_BMI) %>%
   arrange(Sport)
 
-answer9 <- bmi_sport
+bmi_sport
   
-## Question 10 -----------------------------------------------------------------
-answer10 <- olympics %>%
+## Vraag 10 -----------------------------------------------------------------
+olympics %>%
   filter(NOC == "NED" | NOC == "BEL" | NOC == "LUX") %>%
   group_by(Season) %>%
   ggplot(aes(x = Season) ) +
@@ -77,8 +73,8 @@ answer10 <- olympics %>%
   scale_y_continuous(name = "Number of Records", limits = c(0, 600), 
                      position = "right")
 
-## Question 11 -----------------------------------------------------------------
-answer11 <- olympics %>%
+## Vraag 11 -----------------------------------------------------------------
+olympics %>%
   filter(Team == "Refugee Olympic Athletes") %>%
   distinct(Name, .keep_all = TRUE) %>%
   mutate(Name_Length = nchar(Name)) %>%
@@ -89,8 +85,8 @@ answer11 <- olympics %>%
   scale_x_discrete(name = "Name") + 
   theme(text = element_text(family = "mono"))
 
-## Question 12 -----------------------------------------------------------------
-answer12 <- olympics %>%
+## Vraag 12 -----------------------------------------------------------------
+olympics %>%
   group_by(Season) %>%
   summarise(Height_Mean = mean(Height), Height_SE = sd(Height) / sqrt(n())) %>%
   ggplot(aes(x = Season, y = Height_Mean)) + 
