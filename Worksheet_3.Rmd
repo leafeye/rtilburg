@@ -1,0 +1,707 @@
+---
+
+## Research Skills: Programming with R
+
+## Worksheet 3
+
+Welcome to Worksheet 3. Last week we looked at data transformations. This week, we're going to focus on visualizations: Scatterplots, barplots, boxplots and line graphs - and how to adapt them as required. We'll use the same 'houses.txt' data set from last week, and a new R package, `ggplot2`.
+
+### The Grammar of Graphics; Scatterplots
+
+To start with, let's just see an actual graph. Let's install and load `ggplot2`, and read in `houses.txt`. Run the three code chunks below:
+
+```{r Installing ggplot2., eval = FALSE}
+## install the 'ggplot2' package
+install.packages("ggplot2")
+```
+
+```{r Loading ggplot2., messages = FALSE}
+## load 'ggplot2'
+library(ggplot2)
+```
+
+```{r Loading the houses data set., cache = TRUE}
+## read in 'houses.txt'
+houses <- read.delim("houses.txt", stringsAsFactors = FALSE)
+```
+
+You might recall that 'houses.txt' contains data on ~3000 house sales in Ames, Iowa, between 2006 and 2010. The data set was collected in order to fairly price (and thus, tax) houses using their characteristics.
+
+Therefore, as part of our exploratory analysis, let's plot one of our explanatory variables against sales price:
+
+```{r First plot., fig.height = 1.8, fig.width = 8}
+## plotting 'SalePrice' versus 'Lot.Area'
+ggplot() +
+  geom_point(data = houses, mapping = aes(x = Lot.Area, y = SalePrice))
+```
+
+That already looks pretty good, but what, exactly, have we done? We've started building a plot using `ggplot2`, which is widely considered the best R package for plotting. Like last week's `dplyr`, it was developed by Hadley Wickham, and it implements his "Grammar of Graphics" philosophy.
+
+The basic idea is that a plot is made up out of layers, and that each layer consists of at least:
+
+1. a data set
+2. a geometric object
+3. a mapping of variables to aesthetics
+
+Here, a *geometric object* is a shape that you can use to represent data on a plot, like a point, a line, or a bar, while an *aesthetic* is some aspect of that shape, like its position, its thickness, or its color. 
+
+Thus, we have used `ggplot()` to create an empty plot, and added a layer using the first line of code. Our *geometric object* is a cloud of points, the *data* is `houses`, and our *aesthetic* maps the houses' `Lot.Area` to the points' `x` coordinate and their `SalePrice` to the points' `y` coordinate.
+
+The `+` sign that connects our two statements is a special `ggplot2` operator; it's what tells `ggplot2` that these are instructions for building a single plot. A `+` can add a new layer, or it can add functions that modify the look of the plot, like its ***scale*** or its ***theme***, as we'll see later.
+
+For example, the code chunk below adds a `geom_smooth()` layer to our plot, a locally fitted regression line:
+
+```{r Adding a second layer., fig.height = 2, fig.width = 8}
+## adding a regression line
+ggplot() +
+  geom_point(data = houses, aes(x = Lot.Area, y = SalePrice)) +
+  geom_smooth(data = houses, aes(x = Lot.Area, y = SalePrice))
+```
+
+Note the red text that appears: `geom_smooth() using method = 'gam'`; this is  just a reminder of the type of regression that is generating the line. Usually, you don't have to worry about this kind of 'red feedback' at the **Console**. A `Warning:` might be more worrying, but even then, your code has run; it just might not have done what you expect. Only an `Error:` is definitely a problem.
+
+If most of our layers use the same *data* and *aesthetic*, it's also useful to define a *default data set* in the original `ggplot()` call, like so, which will then be inherited by all layers unless explicitly overridden: 
+
+```{r The default data set., fig.height = 2, fig.width = 8}
+## adding a regression line
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice)) +
+  geom_point() +
+  geom_smooth()
+```
+
+Upon reflection, you might wonder how this `geom_smooth()` function works exactly; it's not directly mapping `y` to `SalePrice`, is it? Instead, it's using one of the other features of layers: their *statistical transformation*.
+
+The idea behind a *statistical transformation* is that sometimes, we don't want to plot the data directly, but some transformation of it; a `geom_smooth()`, with its fitted regression line, is such a transformation.
+
+'Under the hood', every `ggplot()` layer includes a statistical transformation, which is specified by the `stat` argument. For `geom_point()`, the default is `"identity"`, which is equal to "no transformation".
+
+The RStudio cheatsheet 'Data Visualization', under Help > Cheatsheets, provides an overview of all the *geometric objects* and their *aesthetics*, and a general idea of what `ggplot2` allows you to plot, and how.
+
+If you look up `geom_point()`, you'll see that, besides a `x` and `y` position, points also have, among other things, a `color`, `shape`, and `size`. Theoretically, you can map each of these dimensions to another variable in the data set. For example, let's map the points' `color` to `Bldg.Type`:
+
+```{r Mapping a 3rd variable., fig.height = 2, fig.width = 8}
+## mapping color to 'Bldg.Type'
+ggplot() +
+  geom_point(data = houses, aes(x = Lot.Area, y = SalePrice, 
+    color = Bldg.Type))
+```
+
+Later we'll see various ways to improve this plot. But first, an important note about the *aesthetics* of *geometric objects*, such as `color`: If you define them *inside* an `aes()` function, they should map to a variable. If you define them *outside* an `aes()` function, they define the look of a whole layer.
+
+```{r Incorrect aes() use., fig.height = 2, fig.width = 8}
+## incorrectly attempting to change the 'color' of all points
+ggplot() +
+  geom_point(data = houses, aes(x = Lot.Area, y = SalePrice, color = "blue"))
+```
+
+```{r Changing all points., fig.height = 2, fig.width = 8}
+## correctly changing the 'color' of all points
+ggplot() +
+  geom_point(data = houses, aes(x = Lot.Area, y = SalePrice), color = "blue")
+```
+
+#### Exercises
+
+(1) Create a new graph that plots `SalePrice` as a function of `Gr.Liv.Area`, with `Lot.Area` mapped to the points' `size`.
+
+```{r Exercise 1. Create a plot., fig.height = 1.9, fig.width = 8}
+## plot 'SalePrice' versus 'Gr.Liv.Area' with 'size' mapped to Lot.Area
+ggplot() +
+  geom_point(data = houses, aes(x = Gr.Liv.Area, y = SalePrice, size = Lot.Area))
+
+```
+
+(2) On all these plots it's difficult to see overlapping points. In the example below, let's make them slightly transparent by setting the overall `alpha` aesthetic to 0.2 (Hint: It's just like setting the overall `color`.)
+
+```{r Exercise 2. Set alpha., fig.height = 2, fig.width = 8}
+## set the `alpha` aesthetic for this plot
+ggplot() +
+  geom_point(data = houses, aes(x = Lot.Area, y = SalePrice), alpha = 0.2)
+```
+
+(3) In this code chunk, no locally fitted regression line appears; why  not?
+
+```{r Exercise 3. Lack of geom_smooth()., fig.height = 2, fig.width = 8}
+## explain why this isn't working
+ggplot() +
+  geom_point(data = houses, aes(x = Lot.Area, y = SalePrice)) +
+  geom_smooth()
+#because the data and aes is only mapped to geom_point
+```
+
+### Boxplots, Barplots and Histograms
+
+In the previous section, we looked at scatterplots and smoothers. Now let's create a basic bar -or boxplot. To do so, we have to add a different *geometric object* to our plot: a *bar* or *boxplot* instead of a *point*. For example, let's plot the total number of houses of each building type:
+
+```{r First barplot., fig.height = 2, fig.width = 8}
+## demonstrating a barplot; the number of each 'Bldg.Type'
+ggplot(data = houses, aes(x = Bldg.Type)) +
+  geom_bar()
+```
+
+Or, the distribution of the sales prices of each building type:
+
+```{r First boxplot., fig.height = 2, fig.width = 8}
+## demonstrating a boxplot; 'SalePrice' for each 'Bldg.Type'
+ggplot(data = houses, aes(x = Bldg.Type, y = SalePrice)) +
+  geom_boxplot()
+```
+
+Here, we're using the fact that for `geom_bar()`, the default *statistical transformation* is `"count"`, while for `geom_boxplot()`, it's `"boxplot"`. That's why we don't have to specify an `y` aesthetic for `geom_bar()`: It automatically calculates the bar heights from the `count` of each `x` value.
+
+Of course, that won't really do anything useful if our `x` variable is continuous, like `Gr.Liv.Area`:
+
+```{r Bad continuous barplot., fig.height = 2, fig.width = 8}
+## demonstrating an uninformative barplot for a continuous variable
+ggplot(data = houses, aes(x = Gr.Liv.Area)) +
+  geom_bar()
+```
+
+In this case, what we want is a `geom_histogram()`. A `geom_histogram()` is a kind of barplot, similar to `geom_bar()`, except that its default *statistical transformation* is `"bin"`, not `"count"`. This splits a continuous variable up into ranges, and then shows the number of observations in each "bin". Like so:
+
+```{r Good continuous barplot: Using histogram., fig.height = 2, fig.width = 8}
+## demonstrating a useful barplot for a *binned* continuous variable
+ggplot(data = houses, aes(x = Gr.Liv.Area)) +
+  geom_histogram()
+```
+
+What if you don't want counts at all? Let's say you wanted a barplot of the mean `SalePrice` per `Bldg.Type`. Generalising from the code for `geom_boxplot()`, this might look right. Instead it gives an error:
+
+```{r Incorrect y mapping., eval = FALSE, fig.height = 2, fig.width = 8}
+## incorrectly attempting to plot the mean `SalePrice` of each `Bldg.Type`
+ggplot(data = houses, aes(x = Bldg.Type, y = SalePrice)) +
+  geom_bar()
+```
+
+What's happening is that `geom_bar()` is creating the `count` transformation by default, and then it can't map another value to the `y` aesthetic also. However, you *can* get `geom_bar()` to directly plot the means, by specifying `stat = "summary"` and `fun.y = "mean"`. Here, the `fun.y` argument is telling `ggplot2` in what way to summarise the `y` aesthetic. Like so:
+
+```{r Using the summary stat., eval = FALSE, fig.height = 2, fig.width = 8}
+## directly plotting the mean `SalePrice` of each `Bldg.Type`
+ggplot(data = houses, aes(x = Bldg.Type, y = SalePrice)) +
+  geom_bar(stat = "summary", fun.y = "mean")
+```
+
+But what if you *do* want to directly specify the heights of each bar, instead of `ggplot2` calculating them for you? There is, of course, an option for that. Let's first load `dplyr` and create a small demo data frame (see Worksheet 2). We will summarize, per `Bldg.Type`, the mean and standard deviation of the cost of a square foot of living space, by dividing `SalePrice` by `Gr.Liv.Area`:
+
+```{r Loading dplyr., message = FALSE}
+## loading 'dplyr'
+library(dplyr)
+```
+
+```{r Small demo data frame.}
+## summarizing the cost of a square foot of living space
+sqft_prices <- houses %>%
+  group_by(Bldg.Type) %>%
+  summarise(SqFt.Price.M = mean(SalePrice / Gr.Liv.Area),
+    SqFt.Price.Sd = sd(SalePrice / Gr.Liv.Area))
+sqft_prices
+```
+
+Now, to directly plot the `SqFt.Price`, we will use `geom_bar()` with `stat = "identity"`, which, you might recall, means "no transformation":
+
+```{r Using the identity stat., fig.height = 2, fig.width = 8}
+## directly specifying the height of the bars in a barplot
+ggplot(sqft_prices, aes(x = Bldg.Type, y = SqFt.Price.M)) +
+  geom_bar(stat = "identity")
+```
+
+To add error bars to this plot, we can use `geom_errorbar()`, where we must specify the `x` coordinate of our error bars, the `ymin`, and the `ymax`, i.e., their vertical range. Helpfully, we've already calculated the standard deviations of our square foot prices in `SqFt.Price.Sd`, so we can do this:
+
+```{r Adding error bars to a bar plot., fig.height = 2, fig.width = 8}
+## adding error bars to a barplot
+ggplot(sqft_prices, aes(x = Bldg.Type, y = SqFt.Price.M)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = SqFt.Price.M - SqFt.Price.Sd,
+    ymax = SqFt.Price.M + SqFt.Price.Sd), width = 0.8)
+```
+
+So what's happpening here? The `geom_errorbar()` function is inheriting the default aesthetics from the original `ggplot2` call, so `x` is already mapped to `Bldg.Type`. Then for `ymin` and `ymax`, we're having the error bars run from the mean values *minus* the standard deviation to the mean values *plus* the standard deviation. The `width` argument controls the width of the bars.
+
+Finally, what if we want to visualize two variables in the same barplot? The most straightforward case is to map one variable to the `x` aesthetic and the other to `fill`, the color of the bars. For instance, this plot shows the number of houses of each `Bldg.Type` for each number of `Bedroom.AbvGr`:
+
+```{r Two variables in a barplot., fig.height = 2, fig.width = 8}
+## demonstrating a barplot visualizing two variables
+ggplot(data = houses, aes(x = Bedroom.AbvGr, fill = Bldg.Type)) +
+  geom_bar()
+```
+
+Because each kind of `Bldg.Type` is mapped to the same `x` aesthetic, one would expect all those bars to be in the same place. The reason they're not is because of `position`, the last attribute of a `ggplot2` layer.
+
+The default *position* for a barplot is `"position = stack"`, which moves overlapping objects so that they're above each other. Another option is `"position = dodge'`, which moves them next to each other:
+
+```{r Using position in a barplot., fig.height = 2, fig.width = 8}
+## demonstrating 'position = "dodge"'
+ggplot(data = houses, aes(x = Bedroom.AbvGr, fill = Bldg.Type)) +
+  geom_bar(position = "dodge")
+```
+
+#### Exercises
+
+(4) Create a boxplot that shows the distribution of `Garage.Area` per `Garage.Type`.
+
+```{r Exercise 4. Create a boxplot., fig.height = 2, fig.width = 8}
+## show the distribution of `Garage.Area` per `Garage.Type`
+ggplot(data = houses, aes(x = Garage.Type, y = Garage.Area)) +
+  geom_boxplot()
+```
+
+(5) The `garage_ages` object below correctly summarizes the mean age of different garage types at the time they were sold, as well as the standard deviation of these means. However, the subsequent plot code gives an error. Can you fix it, and add error bars ranging from the mean minus the standard deviation to the mean plus the standard deviation of the garage ages?
+
+```{r Exercise 5. Fix code & add error bar., eval = FALSE}
+## summarizing the cost of a square foot of living space
+garage_ages <- houses %>%
+  filter(!is.na(Garage.Type)) %>%
+  group_by(Garage.Type) %>%
+  summarise(Garage.Age.M = mean(Yr.Sold - Garage.Yr.Blt),
+    Garage.Age.Sd = sd(Yr.Sold - Garage.Yr.Blt))
+
+## fix this code so it shows the mean age of each garage type & add error bars
+#ggplot(data = houses, aes(x = Garage.Type, y = Garage.Age.M)) +
+  #geom_bar(stat = "identity")
+
+ggplot(data = garage_ages, aes(x = Garage.Type, y = Garage.Age.M)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = Garage.Age.M - Garage.Age.Sd,
+    ymax = Garage.Age.M + Garage.Age.Sd), width = 0.5)
+```
+
+(6) Create a barplot splitting `Year.Built` into 20 bins (use `?` if you're not sure how). Color the bars by `Bldg.Type`. What would you say was the "age of the Duplex"?
+
+```{r Exercise 6. Create a binned barplot., fig.height = 2, fig.width = 8}
+## create a *binned* barplot of number of houses per `Year.Built`
+ggplot() + 
+  geom_histogram(data = houses, aes(x = Year.Built), stat = "bin", bins = 20)
+  
+
+```
+
+(7) The `position` attribute can be used in non-barplots, also. The plot below shows `Overall.Qual` as a function of `Overall.Cond`, but so many points overlap that it's not very informative. Use the 'Data Visualization' cheatsheet to find a value for the `position` argument that will fix this.
+
+```{r Exercise 7. Position in a scatterplot., fig.height = 2, fig.width = 8}
+## use `position` to improve this plot
+ggplot(data = houses, aes(x = Overall.Cond, y = Overall.Qual)) +
+  geom_point(position="jitter")
+```
+
+### Line Graphs & Factors
+
+After scatterplots, smoothers, barplots and boxplots, there's one common plot type we haven't looked at yet: Line graphs. Typically, the purpose of a line graph is to show change over time. In this case, we have the year and month each house was sold, so let's plot the number of sales per year:
+
+```{r Drawing a line graph., fig.height = 2, fig.width = 8}
+## drawing a line graph of the number of houses sold each year
+ggplot(data = houses, aes(x = Yr.Sold)) +
+  geom_line(stat = "count")
+```
+
+We've now added a new kind of geometric object, a `geom_line()`, and used the statistical transformation *count* to show the total number of houses sold each year. But why is there such a drop in 2010?
+
+Let's investigate by plotting the total number of houses sold per month, per year. To do this, we need to add a `group` argument to the `aes()` call. This tells `ggplot()` to create a different line for each `group`; if we want to be able to see which is which, we can map `Yr.Sold` to `color` also:
+
+```{r Using the group argument., fig.height = 2, fig.width = 8}
+## showing the number of houses sold per month and year
+ggplot(data = houses, aes(x = Mo.Sold, group = Yr.Sold, color = Yr.Sold)) +
+  geom_line(stat = "count")
+```
+
+Ah! It appears that the data for 2010 ends in July - that explains it!
+
+Note, however, the odd legend: Instead of showing a separate line for each year, it's showing a gradual color scale from light to dark blue. That's because `ggplot()` thinks `Yr.Sold` is an ordinary number, which can vary continuously - as if "2006.5" would be a valid entry. But it isn't!
+
+So how do we fix this? The simplest way is to turn `Yr.Sold` into a *factor*. From Worksheet 1, you might recall that a *factor* is a special data type for data that can only take on a few possible values, known as *levels*. `Yr.Sold` is effectively data of this type, and we can do the conversion like this:
+
+```{r Turning a variable into a factor.}
+## turning `Yr.Sold` into a factor
+houses$Yr.Sold <- factor(houses$Yr.Sold)
+```
+
+Now, `ggplot()` gives each `Yr.Sold` its own line in the legend:
+
+```{r Plotting after factorisation., fig.height = 2, fig.width = 8}
+## re-plotting after turning `Yr.Sold` into a factor: 
+ggplot(data = houses, aes(x = Mo.Sold, group = Yr.Sold, color = Yr.Sold)) +
+  geom_line(stat = "count")
+```
+
+Unfortunately, now that we've turned `Yr.Sold` into a factor, we can't do ordinary math operations with it anymore. For instance, if we try to find all the rows with `Yr.Sold` before 2008, all we'll get is rows of `NAs`; recall that `NA` is a special R value indicating `Not Available`:
+
+```{r Math operations after factorisation., eval = FALSE, }
+## math operations after turning `Yr.Sold` into a factor: 
+houses[houses$Yr.Sold < 2008, ]
+```
+
+So let's turn `Yr.Sold` back into an ordinary numeric variable, using `as.numeric()` and `as.character()`. Don't forget the `as.character()`; converting to `as.numeric()` directly gives bizarre output, for reasons that we don't have to get into. Just re-read in the data if this happens.
+
+```{r Converting a factor back to numeric.}
+## turning `Yr.Sold` back into a numeric variable
+houses$Yr.Sold <- as.numeric(as.character(houses$Yr.Sold))
+```
+
+#### Exercises
+
+(8) Can you use `geom_line()` to plot the mean sales price of the houses sold each year? (Hint: Look back to Chunk 19.)
+
+```{r Exercise 8. Mean sale prices., fig.height = 2, fig.width = 8}
+## plot the mean sales price per year
+ggplot(data = houses, aes(x = Yr.Sold, y = SalePrice)) +
+  geom_line(stat = "summary", fun.y = "mean")
+
+```
+
+(9) Create a line graph showing the number of houses of each `Bldg.Type` sold each year; map each `Bldg.Type` to a different linetype. 
+
+```{r Exercise 9. Bldg.Types per year., fig.height = 2, fig.width = 8}
+## show the number of houses of each 'Bldg.Type' sold each year
+ggplot(data = houses, aes(x = Yr.Sold, group = Bldg.Type, linetype = Bldg.Type)) +
+  geom_line(stat = "count")
+
+```
+
+(10) Create a line graph with `Garage.Yr.Built` on the x-axis and the number of garages on the y-axis; each number of `Garage.Cars` should be its own line, with a discrete color scale and its own line in the legend. Use the `garages` subset for this; the full `houses` data set has one garage built in the future!
+
+```{r Exercise 10. Line graph of garages., fig.height = 2, fig.width = 8}
+## plot the number of garages per 'Garage.Yr.Blt' with a line per 'Garage.Cars'
+garages <- houses[!is.na(houses$Garage.Yr.Blt) & houses$Garage.Yr.Blt < 2010, ]
+garages$Garage.Cars <- factor(garages$Garage.Cars)
+
+ggplot(data=garages, aes(x=Garage.Yr.Blt, group = Garage.Cars, color=Garage.Cars, linetype=Garage.Cars)) +
+  geom_line(stat="count")
+
+```
+
+### Controlling Plot Appearance
+
+Now that we've worked with all the major plot types, let's try to control the appearance of our plots a bit more. The `ggplot2` package offers two main tools for this: ***scales*** and ***themes***.
+
+#### Using Scales to Change Axes and Legends
+
+In a `ggplot2`, each aesthetic is always linked to a ***scale*** which determines what it looks like. If you don't specify one explicitly, `ggplot2` uses a set of defaults, which depend on the aesthetic and the type of data that you have. But you can override these defaults if you wish.
+
+So, for instance, the types of things you can control with ***scales*** include the limits of an axis, the names of legend labels, and the actual colors used for a `color` aesthetic. This is done by adding specific `scale_..._...()` functions to the plot definition, for instance like so:
+
+```{r Demonstrating scales., fig.height = 2, fig.width = 8}
+## demonstrating two scale functions
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Garage.Type)) +
+  geom_point() +
+  scale_x_continuous(limits = c(0, 75000)) +
+  scale_color_discrete(na.value = "black")
+```
+
+(11) What causes the warning message produced by drawing this plot? (Hint: How many houses have a `Lot.Area` over 75000 feet?)
+
+```{r Exercise 11. Warning., fig.height = 2, fig.width = 8}
+## trace the cause of the warning message
+count(houses[houses$Lot.Area > 75000,])
+#there are 4 houses, warning said we removed 4 houses
+
+```
+
+Each `scale_..._...()` function consists of `scale`, the name of the aesthetic involved, and the type of scale it concerns. A `continuous` scale is for variables that take on arbitrary values, such as `Lot.Area`, while a `discrete` scale is for variables that come in limited flavors, like `Bldg.Type`.
+
+In the example above, we've used `scale_x_continuous()` to control the limits 
+of the x-axis, while we've used `scale_color_discrete()` to set the color of variables with `Garage.Type` equal to `NA` to "black". Compare, for example, the plot above with this one, where we've left all *scales* at their defaults:
+
+```{r Demonstrating default scales., fig.height = 2, fig.width = 8}
+## demonstrating the default scales
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Garage.Type)) +
+  geom_point()
+```
+
+When plotting a discrete variable, like `Bldg.Type`, it can also be desirable to specify each aesthetic choice directly. You can use the `scale_..._manual()` functions for this. As their `values` argument, they require a character vector, with a specification for each variable value, like so:
+
+```{r Manual scales., fig.height = 2, fig.width = 8}
+## specifying each aesthetic choice directly
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Bldg.Type)) +
+  geom_point() +
+  scale_color_manual(values = c("1Fam" = "orange", "2fmCon" = "red",
+    "Duplex" = "green", "Twnhs" = "lightblue", "TwnhsE" = "darkblue"))
+```
+
+To quickly see all the values taken by a particular variable, I recommend `table()`; specify `useNA = "always"` to see the count of `NA` values also:
+
+```{r Using table()., fig.height = 2, fig.width = 8}
+## using table() to check which values are in a variable 
+table(houses$Bldg.Type, useNA = "always")
+```
+
+You can also use each `scale_..._...()` function to control the appearance of the corresponding axis or legend. So, for example, for the `x` and `y` aesthetics, you can set tick mark spacing; for aesthetics that produce legends, you can set the order in which items appear; for either, you can set the title.
+
+For instance, in a `scale_..._...()` function, the argument `name` specifies titles, and `breaks` specifies either tick marks (for axes) or item ordering (for legends). The argument `guide = FALSE` supresses a legend entirely. 
+
+Compare these two plots, for example:
+
+```{r Demonstrating default ordering., fig.height = 2, fig.width = 8}
+## demonstrating a legend's default item ordering and naming
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Bldg.Type)) +
+  geom_point()
+```
+
+```{r Axis naming and legend suppression., fig.height = 2, fig.width = 8}
+## demonstrating axis naming and legend supression
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Bldg.Type)) +
+  geom_point() +
+  scale_y_continuous(name = "Sales Price") +
+  scale_x_continuous(name = "Lot Area") +
+  scale_color_discrete(guide = FALSE)
+```
+
+To specify the ordering of discrete legend items, we can set '`breaks = `' to a vector of variable values, and they'll be displayed in the legend in that order; we can also re-name them using '`labels = `':
+
+```{r Legend appearance., fig.height = 2, fig.width = 8}
+## defining a legend's item ordering and naming explicitly
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Bldg.Type)) +
+  geom_point() +
+  scale_color_discrete(breaks = c("Twnhs", "TwnhsE", "Duplex", "2fmCon",
+    "1Fam"), labels = c("Row Twnhs", "End Twnhs", "Duplex",
+      "2 Fam. Conv.", "Single Fam."))
+```
+
+In a similar way, we can use `scale_x_discrete()` to control the order and names of the bars in a barplot; the order is given by the '`limits = `' argument, while the names are given by `labels = `:
+
+```{r Ordering and labelling bars., fig.height = 2, fig.width = 8}
+## specifying the order and names of the bars in a barplot
+ggplot(data = houses, aes(x = Exter.Qual)) +
+  geom_bar() +
+  scale_x_discrete(limits = c("Fa", "TA", "Gd", "Ex"),
+    labels = c("Fair", "Typical", "Good", "Excellent"))
+```
+
+Note that, in general, in `ggplot2`, there's often many ways of doing things, and `?` doesn't list them exhaustively. This worksheet should help you with most things you might want to do, but otherwise, the best way to get help with `ggplot2` is usually just to Google what you're trying to accomplish.
+
+#### Exercises
+
+(12) Currently, the y-axis in the code chunk below runs kind of awkwardly to just under $800,000. Can you adapt it so that the y-axis runs up to $800,000?
+
+```{r Exercise 12. Fix the y axis., fig.height = 2, fig.width = 8}
+## fix the awkward y axis
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Garage.Type)) +
+  geom_point()+
+  scale_y_continuous(limits = c(0, 800000))
+```
+
+(13) The plot below maps `Gr.Liv.Area` to `size`; adapt it so that it maps `Gr.Liv.Area` to `color`, with a scale that runs from yellow for small houses to red for large houses. You should be able to derive the right `scales_..._` function; then use `?` to find the correct argument.
+
+```{r Exercise 13. Color instead of size., fig.height = 2, fig.width = 8}
+## plot 'SalePrice' versus 'Lot.Area', with 'Gr.Liv.Area' shown by 'color'
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Gr.Liv.Area)) +
+  geom_point() +
+  scale_color_gradient(low="yellow", high = "red")
+```
+
+(14) Re-do this plot with `1Fam` homes shown as stars, `2fmCon` as squares, `Duplex` as pluses, `Twhns` as 'down triangles', and `TwnhsE` as 'up triangles'. You should be able to derive the right `scales_..._` function; each shape is defined by a number; scan `?pch` to see which number is which shape.
+
+```{r Exercise 14. Specify shapes.,  fig.height = 2, fig.width = 8}
+## specify the shape of each 'Bldg.Type' directly
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, shape = Bldg.Type)) +
+  geom_point() +
+  scale_x_continuous(limits = c(0, 75000)) +
+  scale_shape_manual(values = c(8,0,3,6,2) )
+```
+
+(15) Create a barplot showing the number of houses of each `House.Style`, with "1Story" as the far left bar and "2.5Fin" as the far right bar; order the rest in between in a sensible way.
+
+```{r Exercise 15. Specify bar order., fig.height = 2, fig.width = 8}
+## plot the number houses sold for each `House.Style`;
+## order bars from `1Story` to `2.5Fin`.
+ggplot(data = houses, aes(x = House.Style)) +
+  geom_bar() +
+  scale_x_discrete(limits = c("1Story", "1.5Unf", "1.5Fin", "2Story", "2.5Unf", "2.5Fin"))
+```
+
+#### Using Themes to Control Fonts & Overall Appearance
+
+A plot's ***theme*** determines everything about it that isn't directly related to the display of the data. So, things like font sizes, legend positions, background colors, figure margins, and so on.
+
+The basic way to change such things is to add a call to `theme()` to a plot definition. Using `?theme` will show you a list of adaptable elements. A few, like `legend.position`, can be specified directly:
+
+```{r Moving the legend., fig.height = 2.4, fig.width = 8}
+## moving the legend below the plot
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Gr.Liv.Area)) +
+  geom_point() +
+  theme(legend.position = "bottom")
+```
+
+Most elements, however, require a call to a different function *within* `theme()` to change. For instance, the legend we have just moved to the bottom of the plot is really too small now. If you look at `?theme`, you'll see that it has an argument, `legend.key.width`, that in turn expects a `unit`.
+
+If you then try `?unit`, and click on 'Function to Create a Unit Object', you can see that its non-default arguments are 'a number' and 'a unit', like "cm" or "inch". So, to lengthen the legend key, we might do this:
+
+```{r Lengthening the legend key., fig.height = 2, fig.width = 8}
+## lengthening the legend key
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Gr.Liv.Area)) +
+  geom_point() +
+  theme(legend.position = "bottom", legend.key.width = unit(1, "cm"))
+```
+
+Similarly, if you want to change the size or font of a text element, you have to pass an `element_text()` object. (Use `?` to see more details on it.) The argument `text` changes (almost) all text elements at once:
+
+```{r Changing all text., fig.height = 2, fig.width = 8}
+## changing the size and color of most of the text in the plot
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Gr.Liv.Area)) +
+  geom_point() +
+  theme(text = element_text(color = "tan", size = 12))
+```
+
+Other arguments work on specific text elements only, i.e., `axis.title`:
+
+```{r Changing the axis title., fig.height = 2, fig.width = 8}
+## changing the size and color of the axis titles only
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Gr.Liv.Area)) +
+  geom_point() +
+  theme(axis.title = element_text(color = "tan", size = 12))
+```
+
+\newpage
+In addition, there are a number of arguments that expect either a `element_rect()` or an `element_line()` object; like `element_text()`, you can get more information about these using `?`. If you want to omit a plot element completely, you can use `element_blank()`, like so:
+
+```{r Removing background grid., fig.height = 2, fig.width = 8}
+## removing the background grid
+ggplot(data = houses, aes(x = Lot.Area, y = SalePrice, color = Gr.Liv.Area)) +
+  geom_point() +
+  theme(panel.grid = element_blank())
+```
+
+#### Exercises
+
+(16) Plot `SalePrice` as a function of `Lot.Area`, and then map `color` to `Bldg.Type` and `size` to `Gr.Liv.Area`. The legends should be next to each other, instead of under each other, and have dark grey backgrounds.
+
+```{r Exercise 16. Adapt a plot legend., fig.height = 2, fig.width = 8}
+## plot 'SalePrice' vs 'Lot.Area', with 'Bldg.Type' maaped to 'color' and
+## 'Gr.Liv.Area' to size; put the legends next to each other, with grey boxes
+ggplot(data=houses, aes(x=Lot.Area, y=SalePrice, color=Bldg.Type, size=Gr.Liv.Area )) +
+  geom_point() +
+  theme(legend.background = element_rect(fill="grey47"), legend.box = "horizontal")
+
+```
+
+(17) The plot below uses `theme()` to move the x-axis about 0.4 cm away from the plot. The `unit` specification follows the `TRouBLe` order: Top, Right, Bottom, Left. Knowing that, can you figure out how to move the y-axis title about 0.4 cm away from the plot, too? Adapt the code chunk below.
+
+```{r Exercise 17. Specify margins., fig.height = 2, fig.width = 8}
+## move the y-axis title by 0.4 cm
+ggplot(data = houses, aes(x = Garage.Type, y = SalePrice)) +
+  geom_boxplot() +
+  theme(axis.title.x = element_text(margin = unit(c(0.4, 0, 0, 0), "cm")),
+        axis.title.y = element_text(margin = unit(c(0, 0.4, 0, 0), "cm")))
+
+
+
+```
+
+### Facets
+
+So far, we've covered how to create different types of plots, and how to customize their appearance. But what if we want more than one plot in a single figure? This class won't cover the general case, but there's one type of multi-panel figure that's very easy to do in `ggplot2`, using *facets*.
+
+A plot's ***facet specification*** splits it up into multiple plots based on a specific variable, or combination of two variables. Essentially, it repeatedly creates the same plot for a different subset of the data.
+
+The `facet_grid()` function accomplishes this; its input is a formula, like `x ~ y`, where `x` is the variable that will vary across rows, and `y` the one that will vary across columns; a `.` leaves an empty dimension.
+
+To clarify this, let's plot the distribution of `SalePrice` separately for each combination of `Full.Bath` and `Bedroom.AbvGr`, with `Full.Bath` varying across rows, and `Bedroom.AbvGr` varying across columns:
+
+```{r Creating a subset to demonstrate facets with.}
+## creating a subset of average houses
+average_houses <- houses[houses$Bedroom.AbvGr %in% c(1:4) &
+    houses$Full.Bath %in% c(1:2), ]
+```
+
+```{r Example of facets., fig.height = 4, fig.width = 8}
+## showing `SalePrice` for each combination of `Full.Bath` & Bedroom.AbvGr
+ggplot(data = average_houses, aes(x = SalePrice)) +
+  geom_histogram() +
+  scale_y_continuous("Number of Houses") +
+  scale_x_continuous("Sale Price") +
+  facet_grid(Full.Bath ~ Bedroom.AbvGr)
+```
+
+#### Exercises
+
+(18) Create a scatterplot that shows `SalePrice` as a function of `Garage.Area`, and then facets by `Garage.Type`. (Hint: You'll need to replace one of the faceting dimensions by `.`)
+
+```{r Exercise 18. Facet in one dimension., fig.height = 2, fig.width = 8}
+## create a scatterplot that facets by Garage.Type
+
+```
+
+(19) Use `theme()` to adapt the plot below so that the facets are about 3 mm apart both horizontally and vertically.
+
+```{r Exercise 19. Adapt facet spacing., fig.height = 2, fig.width = 8}
+## adapt this plot so the facets are about 3 mm apart
+
+```
+
+### Putting It All Together
+
+(20) Create a barplot that shows, for each value of `Bedroom.AbvGr`, the corresponding distribution of the `Full.Bath` variable. In other words, this barplot should have `Bedroom.AbvGr` on the x-axis, the number of houses on the y-axis, and `Full.Bath` reflected in the color of the bars.
+
+Improve the plot in the following ways:
+
+* Call the x-axis "Number of Bedrooms" and the y-axis "Number of Houses".
+* Show `Full.Bath` with specific colors from the 'Tilburg University' house style: "#C3BCB2", "#CC9933", "#339900", "#008EC6" and "#003366". These are HEX color codes; you can specify these just like built-in colors.
+* Make the legend title "Number of Bathrooms", and move it under the plot.
+* Make all plot text size 14.
+
+```{r Exercise 20. Putting it all together., fig.height = 3, fig.width = 8}
+## create the plot described above
+houses$Full.Bath <- factor(houses$Full.Bath)
+houses$Bedroom.AbvGr <- factor(houses$Bedroom.AbvGr)
+
+ggplot(data = houses, aes(x = Bedroom.AbvGr, fill = Full.Bath)) +
+  geom_bar() +
+  scale_x_discrete(name = "Number of Bedrooms") +
+  scale_y_continuous(name = "Number of Houses") +
+  scale_fill_manual(name = "Number of Bathrooms", values = c("0" = "#C3BCB2", "1" = "#CC9933",
+    "2" = "#339900", "3" = "#008EC6", "4" = "#003366")) + 
+  theme(legend.position = "bottom", legend.direction = "horizontal", 
+        text = element_text(size = 14))
+  
+```
+
+
+### Skills & Further Resources
+
+This worksheet has introduced plotting and date-time objects in R.
+
+After working through it, you should be able to:
+
+1. explain the basic philosophy behind the 'Grammar of Graphics'
+2. explain how `aes()` maps a variable to a visual aspect of a plot
+3. list and describe the `ggplot()` components of plots and layers 
+4. create a scatterplot, boxplot, barplot, and line graph using `ggplot()`
+5. add errorbars to a plot using `geom_errorbar()`
+6. change the color, shape, etc. of objects within a plot
+7. use `scales_...` to control the exact color, shape, etc. of each variable
+8. use `scales_...` to manipulate the appearance of the legends and axes
+9. use `factor()` to create discrete scales and legends
+10. use `theme()` to control the overall look of the plot
+11. use `facet_grid()` to split a plot into multiple panels
+12. use the 'Data Visualization' cheatsheet to find new plotting options
+
+If you want a bit more information on some of these topics, I recommend:
+
+* skills 1 - 2:
+    + §3 in 'R for Data Science'
+    + http://r4ds.had.co.nz
+    + by Garrett Grolemund & Hadley Wickham
+    
+* skills 3 - 10:
+    + §8, Graphs, in 'the Cookbook to R'
+    + http://www.cookbook-r.com/Graphs/
+    + by Winston Chang
+
+### Overview of New R Functions & Operators
+
+R code             | does what
+------------------ | ---------------------------------------------
+`+`                | add more to a `ggplot()`
+`aes()`            | control the mapping of variables to aesthetics
+`element_blank()`  | create a blank element for use with `theme()`
+`element_rect()`   | create a rectangular element for use with `theme()`
+`element_text()`   | create a textual element for use with `theme()`
+`factor()`         | convert a variable to the `factor()` data type
+`facet_grid()`     | split a plot into multiple panels
+`ggplot()`         | create a `ggplot()` object
+`geom_bar()`       | add bars to a plot
+`geom_boxplot()`   | add boxplots to a plot
+`geom_errorbar()`  | add errorbars to a plot
+`geom_line()`      | add lines to a plot
+`geom_point()`     | add points to a plot
+`geom_smooth()`    | add regression lines to a plot
+`scale_..._...`    | control aesthetics, axes and legends
+`theme()`          | control the overall look of the plot

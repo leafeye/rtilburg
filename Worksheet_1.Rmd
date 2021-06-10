@@ -1,0 +1,720 @@
+
+## Research Skills: Programming with R
+
+## Worksheet 1
+
+Welcome to the course 'Research Skills: Programming with R'! You're looking at Worksheet 1. It contains both informative text and exercises, and if you work through each week's material, you should be sufficiently prepared for the assignments and group project that make up the final examination.
+
+Hopefully, you are reading this as an RMarkdown document. If not, download R (the language; www.r-project.org) and RStudio (the development environment; www.rstudio.com). Both are freely available for most operating systems. Then open RStudio, and use File > Open File to open Worksheet_1.Rmd.
+
+Then, if you are using an RStudio version newer than 0.99.903, please update your RMarkdown preferences. Go to Tools > Global Options > RMarkdown and ensure that 'Show output inline [...]' is off.
+
+Now, we'll need to talk a tiny bit about RMarkdown. It's a special format for intermingling R code and text; after installing the correct add-ons, RStudio can automatically convert a .Rmd file into a nicely formatted PDF. But in this course, we'll mostly be using it as a kind of interactive notebook.
+
+The greyish box below is a code chunk. The '```{r Example code chunk.}' bits aren't R code: They're RMarkdown code, and they tell RStudio that everything *in between* them is R code. The rest of this document is just text, with occasional formatting instructions, like the stars around *in between*.
+
+But, for now, let's focus on the R code chunks. To make RStudio execute one, you can either:
+
+* Click the little green arrow at the top right of the chunk
+* Click anywhere inside it, and press Cmd/Ctrl + Shift + Enter
+
+```{r Example code chunk.}
+1 + 1
+```
+
+If you do either of these things, you should see the calculation and its result appear in the **Console** tab. Did that work? Great. In Worksheet 3, when we start drawing plots, they'll appear too, in the **Plots** tab.
+
+In general, in this course, each .Rmd Worksheet will have exercises scattered throughout the text, as well as a set of exercises at the end of each section. They will be marked by a number in between parentheses, like so (1), and an R code chunk will be provided for you to type your answer into.
+
+At the very end of each worksheet, there will also be a summary of the skills it has intended to teach, plus some links to free online resources where you can find extra help and / or more information. There will also be an overview of the R operators and functions it has introduced, for future reference. 
+
+### Calculations, Objects, Comments & the Workspace
+
+To start with, let's talk about some R basics. As shown above, you can use it as a calculator. Type any calculation into the **Console**, at the `>` prompt below, hit Enter, and R will produce the result (try it!).
+
+You can also store things in objects, using the `<-` operator. The name of the object goes to the left of the arrow, its contents go to the right. Then if you want to see it, type its name at the console. For example:
+
+```{r The assignment operator.}
+my_obj <- "a"
+my_obj
+```
+
+This has put the character `"a"` inside the object `my_obj`. You can store anything as an R object: Numbers, characters, `TRUE` and `FALSE`, as well as more complex data structures, like lists and functions, that we will get to later. You can change an object's type at will; re-using it just overwrites it:
+
+```{r Overwriting an object.}
+my_obj <- 1
+my_obj
+my_obj <- TRUE
+my_obj
+```
+
+If you want R to store a character like `"a"` or string of characters like `"apple", you have to surround it in quotation marks. Otherwise R thinks you're referring to the name of an object. So this will give an error:
+
+```{r Strings require quotation marks., error = TRUE}
+my_var <- apple
+```
+
+An object can have any name, as long as it doesn't start with a number or underscore, and doesn't contain any punctuation marks other than underscores and periods. 
+
+(1) Bearing the above in mind, create your own object and print it:
+
+```{r Exercise 1.}
+## create your own object, and print it to the console
+own_object <- 1991
+own_object
+```
+
+You'll notice that in this code block I used `##`: That is a signal to R that everything that follows on the same line is a comment, not actual code.
+
+All objects are stored in R's "workspace". You can see what's currently in R's workspace in the **Environment** tab, or by typing `ls()` at the **Console**:
+
+```{r Viewing the workspace.}
+## viewing the objects currently in R's workspace
+ls()
+```
+
+Right now, that should list `"my_obj"`, the second object that you've just created, and nothing else. If you close RStudio, you'll be asked whether you want to save your workspace; if you say no, all objects in your workspace will disappear when you close RStudio.
+
+*Generally*, this is what you want: It's better to start with a fresh workspace each time, so that you don't have any old objects hanging around that you've forgotten the exact contents of. If you want to remove an object manually within a session, you can use `rm()`:
+
+```{r Deleting objects.}
+## deleting the object "my_obj" from the workspace
+rm(my_obj)
+```
+
+When you want to remove *all* the objects in your workspace, the easiest is to use 'Clear Workspace' under RStudio's **Session** drop down menu.
+
+Going forward, these class .Rmd files will often assume that you have objects in your workspace that were created in previous code chunks. If you close RStudio without saving your workspace, those objects will be gone, and you will get an error if you later try to pick up where you left off.
+
+To correct this, you can click on the little 'downward' arrow at the top right of the code chunk where you'd like to continue: That will run all the earlier code chunks that are part of that RMarkdown file.
+
+\newpage
+#### Exercises
+
+(2) Try to predict the result of the following two statements. What will you see at the console when you run them? What will change in R's workspace? Add two comments to the code chunk below, one explaining each result.
+
+```{r Exercise 2., eval = FALSE}
+## comment on the results of these assignments
+my_new_obj <- "orange"
+#this will create a new object, with the string "orange" attached to it
+
+5_is_a_number <- TRUE
+#this will give an error? it starts with a number and this is not allowed
+```
+
+(3) Create two new objects that are both numbers. Create a third object that is the result of adding these two new ones together.
+
+```{r Exercise 3., eval = FALSE}
+## create two objects, and add them together in a third
+first_object <- 2
+second_object <- 3
+third_object = first_object + second_object
+
+```
+
+(4) Look at your workspace, and then remove one of your new objects.
+
+```{r Exercise 4., eval = FALSE}
+## list the contents of the workspace, then remove an object
+ls()
+rm(third_object)
+
+```
+
+(5) Create a new object that is a copy of an existing object.
+
+```{r Exercise 5., eval = FALSE}
+## copy an object
+first_copy <- first_object
+```
+
+### Functions & Help
+
+In the previous section, we've already used two R functions: `ls()` and `rm()`. A function is basically just a self-contained bit of code that does something. You can recognize an R function by the parentheses `()`; anything inside the parentheses is an argument, or input, to the function.
+
+R comes with lots of built-in functions, and R packages are mostly just add-ons of extra functions. In Worksheet 4, we'll learn how to define our own functions, but for now, let's just look at an existing one:
+
+```{r Testing round().}
+## testing R's 'round' function with some examples
+round(3.65)
+round(0.3)
+```
+
+So, `round()` takes a number and rounds it off to the nearest whole number. But is that all it can do? To find out extra information about any function, we can type `?` and then its name into the **Console**:
+
+```{r Getting help., eval = FALSE}
+## getting help on R's 'round()' function
+?round
+```
+
+In RStudio, that will open up a screen under the **Help** tab. Under the Usage heading, you'll see that `round()` actually takes two arguments: A number, `x`, and `digits`, the number of digits you want it rounded off to. However, this argument has a default value, in this case, `digits = 0`.
+
+The `=` here is an alternative to the `<-` assignment operator that we've used so far; they're mostly equivalent, but it's customary to use the `=` only in function calls, and the `<-` everywhere else.
+
+When calling functions, there's three rules to remember: You must specify all arguments that don't have defaults, or risk errors. If you don't name arguments as you supply them, they will be matched to the function's arguments in order. Finally, if you do name them, you can supply them in any order you like.
+
+```{r Specifying function inputs.}
+## these calls to the 'round' function are all the same
+round(3.65, digits = 1)     ## explicitly naming the 'digits' argument
+round(3.65, 1)              ## no naming of arguments, so just matched in order
+round(digits = 1, x = 3.65) ## both arguments named, so can reverse order
+```
+
+(6) What do you think will happen if you try to call `round()` like this? Why?
+
+```{r Exercise 6., eval = FALSE}
+## predict the outcome of this call to 'round()'
+round(3.65, "1")
+#it gives an error because the second argument is a string
+
+```
+
+For most functions, supplying more inputs than it explicitly expects will generate an error. For example, try typing `round(3.65, 4, 1)` into the **Console**. However, some functions accept a special argument, `...`, which matches any inputs not matched by any other argument.
+
+For example, if you look `?round()`, you will also see the function `trunc()`. This function returns its input with all the decimals removed. But right now, what's relevant is that it has a `...` argument. This means that you can call it with all the additional input that you like, and it won't complain:
+
+```{r Round() versus trunc()., error = TRUE}
+## demonstrating round() versus trunc()
+round(3.65)
+trunc(3.65)
+
+## calling functions with additional arguments
+round(3.45, "apple")
+trunc(3.45, "apple", "hat")
+```
+
+So why does `trunc()` accept a `...` argument? That's a bit complex to explain, but sometimes accidentally matching a `...` argument can cause very unexpected errors, so it's good to be aware of them.
+
+In other functions, the `...` argument has a very clear purpose, which is to match an arbitrary number of inputs. This is the case for `paste()`, which converts any number of inputs into a single string of characters:
+
+```{r Demonstrating paste().}
+## demonstrating the `paste()` function
+paste("This is a", "string", "pasted together", "from", 6, "parts.")
+paste("This one", "though", "has only three.")
+```
+
+As a final point, you might wonder how to find useful R functions that you don't already know the name of. The short answer is that within R there is no good way to do this. Instead, just Google what you are trying to do; usually there will be a Stackoverflow post pointing you in the right direction.
+
+#### Exercises
+
+(7) Knowing what you now know about functions, and R's `?` help, can you...
+
+* use the function `log()` to get the base 2 logarithm of 8?
+
+* use the function `rnorm()` to get a random number drawn from a normal distribution with a mean of 0 and a standard deviation of 3?
+
+* use the function `substr()` to extract the letters 'red' from 'credit'?
+
+(Hint: Read the `?` for each function carefully; it should be possible to figure out how to supply the arguments in order to get the requested result, even if you're not sure what a logarithm is, or a normal distribution.)
+
+```{r Exercise 7., eval = FALSE}
+## find the base 2 logarithm of 8 using 'log()'
+log(8, base = 2)
+
+## sample from a N(0, 3) distribution using 'rnorm()'
+rnorm(n = 1, mean = 0, sd = 3) ## draw 1 sample
+
+## extract the letters 'red' from 'credit' using 'substr()'
+substr("credit", start = 2, stop = 4)
+```
+
+(8) As you might expect, you can also call functions directly on the output of other functions. Add a comment to this code chunk explaining why these two statements produce different results, and why neither produces an error.
+
+```{r Exercise 8., eval = FALSE}
+## add a comment that explains difference between these two calls
+as.character(round(3.67), digits = 1)
+as.character(round(3.67, digits = 1))
+#the first one doesnt include the digits = 1 for the round function
+```
+
+(9) The text printed below is pretty ugly. Without changing the objects, can you capitalise the first letter of 'raven' and remove the spaces before the periods? Hint: Use `substr()`, `toupper()` and `?paste`.
+
+```{r Exercise 9.}
+## use functions to prettify printed output
+bird_name <- "raven"
+bird_weight <- 2
+weight_unit <- "kg"
+bird_span <- 1.3
+span_unit <- "m"
+
+newbird = paste0(toupper(substr(bird_name, start = 1, stop = 1)), substr(bird_name, start = 2, stop = 5))
+
+
+paste(newbird, ". Weight:", bird_weight, weight_unit, ". Wingspan:", 
+  bird_span, span_unit, ".", sep = "")
+
+```
+
+### Vectors, Lists and Data Frames
+
+Now that we've discussed the basics of how to work with R - creating objects, calling functions, and getting help - it's time to talk a bit more about R's data structures. We'll restrict ourselves to the three most useful ones: vectors, lists, and data frames.
+
+The simplest R data structure is the *atomic vector*: an ordered collection of items of the same basic, or 'atomic', type. R's most common atomic types are character, numeric, and logical. You can define an R atomic vector using `c()`, where the 'c' is short for 'concatenate':
+
+```{r Creating atomic vectors.}
+## testing R's vector-building function, c()
+my_char_vec <- c("apple", "orange", "banana")
+my_char_vec
+
+my_num_vec <- c(1, 6, 11.3)
+my_num_vec
+
+my_logic_vec <- c(FALSE, TRUE, FALSE)
+my_logic_vec
+```
+
+(Note that `c()`, like `paste()` as described in the previous section, is a function that allows for an arbitrary number of inputs, using the `...` argument: You can concatenate endless things together!)
+
+When you try to mix different atomic types in a single vector, R will automatically convert them to the most 'general' type among those that you supply; often, that will be character:
+
+```{r Automatic conversions.}
+## demonstrating R's automatic conversions
+mix_vec_1 <- c("apple", 1.6, TRUE)
+mix_vec_1
+```
+
+You can see that R has converted all of the contents of `mix_vec_1` to characters because of the quotation marks that now surround them. But if you try to mix just numbers and logicals, R will do something else:
+
+```{r Mixed vectors.}
+## building a vector from numbers and booleans
+mix_vec_2 <- c(5, 4.9, FALSE)
+mix_vec_2
+```
+
+Now, `TRUE` becomes 1 while `FALSE` becomes 0. This can be useful, as we will see in Worksheet 2. But R's automatic conversions become especially important when reading in real data: Just one non-numeric input will cause R to convert everything to character, which can be problematic.
+
+You can also use the `c()` command to join two vectors together, or to add new values to an existing vector.
+
+(10) For instance, can you add together `mix_vec_1` and `mix_vec_2` in the code chunk below? Why will the content of this vector `mix_vec_3` be different from creating it directly, as in the `all_at_once_vec`?
+
+```{r Exercise 10., eval = FALSE}
+## add mix_vec_1 and mix_vec_2 together
+mix_vec_1 <- c("apple", 1.6, TRUE)
+mix_vec_2 <- c(5, 4.9, FALSE)
+
+## answer: concatenating the two 'mix_vecs'
+mix_vec_3 <- c(mix_vec_1, mix_vec_2)
+
+## why is this vector different?
+all_at_once_vec <- c("apple", 1.6, TRUE, 5, 4.9, FALSE)
+#the False value is not converted to a zero
+
+```
+
+If you want to collect together things that are not of the same type, what you need is a `list()`. A list is an arbitrary, but ordered, collection of things: Characters, numbers, vectors, other lists, functions. Like so:
+
+```{r Creating lists.}
+## building a list
+my_list <- list(clothes = c("hat", "scarf"), one_number = 6.5)
+my_list
+```
+
+If you need to store information in a table-like structure, what you want is probably a `data.frame()`. A data frame is just a list of vectors of equal length, with named columns. You build one like this:
+
+```{r Creating data frames.}
+## building a data frame
+my_df <- data.frame(fruits = c("apple", "orange", "pear"),
+                    tastyness = c(8, 7, 4))
+my_df
+```
+
+If you want to know the type of an existing object, you can use `class()`. That will return `"list"` or `"data.frame"` as appropriate, or the atomic type of a vector, such as `"character"` or `"numeric"`. Try it:
+
+```{r Finding the class of an object.}
+## demonstrating the use of 'class()'
+class(my_num_vec)
+class(my_list)
+class(my_df)
+```
+
+#### Exercises
+
+(11) Let's say you wanted an object that would store together the name of a zoo, the types of animals it has, and last year's profit. What data structure would you use for this? Can you produce an example, using four animals? You can build it up out of intermediate objects if you like.
+
+```{r Exercise 11.}
+## store together the name of a zoo, its animals, and its profit
+zoolist <- list(name = "Artis", animals = c("lion", "elephant", "rhino", "pinguin"), profit = 20000)
+
+```
+
+(12) How about if you wanted to store some information about each animal? Say, for each type, the total number of individuals, their average weight, their average height, and how much it costs to feed them? Build this data structure below; again, feel free to use some intermediate objects.
+
+```{r Exercise 12.}
+## store together some animals and their characteristics
+animals <- c("lion", "elephant", "rhino", "pinguin")
+amount <- c(3, 2, 2, 8)
+avgweight <- c(150, 300, 280, 20)
+avgheight <- c(110, 230, 180, 50)
+
+animaldf <- data.frame(animals, amount, avgweight, avgheight)
+animaldf
+
+```
+
+#### Subsetting
+
+For all three of these types of objects, you'll want to be able to extract individual elements, or ranges of elements. The primary way to do that is by putting numbers into square brackets `[]`: You'll get back the elements at the positions specified by the numbers. For example:
+
+```{r Subsetting using [].}
+## demonstrating the subsetting of vectors
+my_char_vec
+my_char_vec[1]
+
+my_num_vec
+my_num_vec[c(1, 2)]
+
+my_logic_vec
+my_logic_vec[c(1, 3)]
+```
+
+(13) It is also possible to use negatives indices when subsetting. What do you think `my_char_vec[-1]` does? Try it out.
+
+```{r Exercise 13., eval = FALSE}
+## investigate the effect of negative indices
+my_char_vec[-1]
+my_char_vec[c(-1, -3)]
+#negative indices returns everything but the index nr
+
+```
+
+(14) How about entering an index that's larger than the vector's size, such as `my_char_vec[4]`? What is the result of that?
+
+```{r Exercise 14., eval = FALSE}
+## investigate the effect of out of bounds indices
+my_char_vec[4]
+#returns NA
+
+```
+
+If you use the square brackets `[]` with lists, you'll get back a new list that consists of all the elements at the numbers you specify. If you want just a single element, you have to use double brackets, `[[]]`. To test the difference between these two options, we can use the function `is.list()`:
+
+```{r [] versus [[]].}
+## a single set of square brackets returns a sublist
+my_list[1] ## in this case, a sublist of just one item (a vector)
+is.list(my_list[1])
+
+## double square brackets returns the element itself
+my_list[[1]] ## in this case, a vector containing 3 strings
+is.list(my_list[[1]])
+```
+
+\newpage
+Finally, remember that 'under the hood', a data frame is a list of vectors, so using `[]` returns a new data frame containing just those column(s), while `[[]]` returns the vector that makes up that specific column.
+
+```{r Subsetting data frames with [] and [[]].}
+## subsetting data frames
+my_df[2]
+is.data.frame(my_df[2])
+
+my_df[[2]]
+is.data.frame(my_df[[2]])
+```
+
+When subsetting data frames, you can also put column names inside the square brackets instead of numbers, and you'll get back that column only. It will also work with lists that have named items. Like so:
+
+```{r Subsetting with square brackets and names.}
+## subsetting a data frame with [] and the name of a column
+my_df["tastyness"]
+
+## subsetting a list with [] and the name of an item
+my_list["one_number"]
+```
+
+Often, when you're subsetting data frames, you'll want to use the `[ , ]` notation: Numbers before the comma specify rows, while those after the comma specify columns. So `my_df[1, 3]` returns the item in row 1, column 3, while `my_df[1, ]` returns row 1 and `my_df[, 2]` returns column 2.
+
+```{r Subsetting data frames by row and column.}
+## returning the item in row 2, column 2
+my_df
+my_df[2, 2]
+```
+
+A final option is to use the `$` notation. All the columns of a data frame have names, and you can subselect a single column using the name of the data frame, the `$`, and then the name of the column. Again, it will also work with lists that have named items, like `my_list`. Like so:
+
+\newpage
+```{r Subsetting data frames with $.}
+## subsetting a data frame using the $ notation
+my_df$tastyness
+
+## subsetting a list using the $ notation
+my_list$clothes
+```
+
+You can also combine these operators together, or use them to replace parts of an existing object. You can even use the `[]`, `[[]]`, or `$` notation to add a completely new item to an object; just use a number or name the object doesn't already have, and a new item will be added.
+
+```{r Combining operators & adding items.}
+## adding a new item to my_list
+my_list[[3]] <- "a new item"
+
+## replacing the first item of 'clothes' with an new item
+my_list$clothes[1] <- "trousers"
+my_list
+
+## adding a new column to the data frame 'my_df'
+my_df$healthyness <- c(9, 9, 9)
+my_df
+```
+
+Conversely, if you just want to drop an item from a list or data frame, you can set the contents of that item to `NULL` and it will be removed completely:
+
+```{r Removing items.}
+## creating a new list with two items
+my_new_list <- list(colors = c("red", "blue"), shapes = c("square", "circle"))
+
+## removing a list item by setting it to NULL
+my_new_list$shapes <- NULL
+my_new_list
+```
+
+You might be wondering why it's necessary to learn so many different ways of indexing and subsetting objects. The answer is that, when you're actually working with R, particularly on more complex problems, sometimes one way will be more convenient, and sometimes another. Now you're flexible.
+
+\newpage
+#### Exercises
+
+(15) Let's say you really despise oranges, but love pears. In the data frame my_df, can you change the tastyness of oranges to 3 and the tastyness of pears to 9? Use two different indexing methods to do so.
+
+```{r Exercise 15., eval = FALSE}
+## adjust the data in the my_df data frame
+my_df
+my_df$tastyness[2] <- 3
+my_df[3,2] <- 9
+my_df
+```
+
+(16) Now that you've fixed the tastyness ratings, can you add another column to the my_df data frame, and then return only row 3?
+
+```{r Exercise 16., eval = FALSE}
+## add another column to the my_df data frame, then return row 3
+my_df$cost <- c(1,2,1)
+my_df[3,]
+
+```
+
+(17) The code chunk below throws an error. Why? Can you fix it?
+
+```{r Exercise 17., eval = FALSE}
+## why doesn't this work?
+round(my_list[2])
+#it is the second element of the list, but not the value it contains
+#it needs double brackets
+round(my_list[[2]])
+
+```
+
+### Sidebar: Factors
+
+You may or may not have noticed this, but so far, we have systematically avoided subsetting the first column of the data frame `my_df`. Try it now.
+
+```{r Revealing a factor.}
+## printing my_df
+my_df
+
+## subsetting the first column of my_df
+my_df[ , 1]
+```
+
+You were probably expecting a vector of characters as the result of this operation. But there are no quotation marks around the individual items, so they are not characters, and there's this strange line about `levels` ...?
+
+Instead of a vector of characters, our subsetting operation has returned a vector of factors, another of R's atomic types. Factors are meant especially for categorical data - data that can only take on a small number of distinct values, such as `Patient` or `Control`, or sex, or day of the week.
+
+But why is the first column of `my_df` a factor? Try `?data.frame`: Notice the argument `stringsAsFactors` with a default value of `TRUE`: Any vector of characters supplied to `data.frame()` is automatically converted to factor. Use `stringsAsFactors = FALSE` to avoid this automatic conversion:
+
+```{r Avoiding factor conversion.}
+## avoiding factor conversion when creating a data frame
+my_new_df <- data.frame(artefacts = c("mask", "tablet", "urn"),
+  stringsAsFactors = FALSE)
+
+## now the 'artefacts' column is just characters
+my_new_df$artefacts
+```
+
+We'll discuss factors in more detail in Worksheets 3 & 6, but for now, just remember that once's something is a factor, you can't just add new values to it; unless the new value is one of the existing `levels`, you'll get a `<NA>` instead, where `NA` is a special R value indicating 'not available':
+
+```{r Trying to change a factor.}
+## trying to change the first item of `my_df$fruits` to "raspberry" - warning!
+my_df$fruits[1] <- "raspberry"
+
+## the first item of my_df is now NA!
+my_df
+```
+
+To avoid this behavior, convert the problematic item back to character first, using the `as.character()` function; then you can change what you like:
+
+```{r Using as.character().}
+## converting a factor back to character
+my_df$fruits <- as.character(my_df$fruits)
+
+## now changing a value works!
+my_df$fruits[1] <- "raspberry"
+```
+
+Better yet, of course, is to avoid the conversion to `factor()` in the first place; always set `stringsAsFactors = FALSE` when building a new data frame.
+
+### The Importance of Vectors
+
+As a close to this week's class, let's talk a bit more about vectors, because one thing that makes R different from most other programming languages is the centrality of vectors.
+
+Secretly, pretty much everything in R is actually a vector, or built up out of vectors. For instance, when you assign a number to an object, you're actually creating a numeric vector of length 1:
+
+```{r Single numbers are vectors.}
+## illustrating that R stores even single numbers as vectors
+secretly_a_vector <- 5
+is.vector(secretly_a_vector)
+secretly_a_vector[1]
+```
+
+Accordingly, many functions in R are optimised to work on vectors. Even simple operators like `+`, `-`, and `>` work on entire vectors at once:
+
+```{r Vectorised operators.}
+## illustrating how R's operators are vectorised
+my_num_1 <- c(1, 1, 1)
+my_num_2 <- c(1, 3, 5)
+
+## adding vectors together
+my_num_1 + my_num_2
+
+## comparing vector values
+my_num_2 > my_num_1
+```
+
+If you try to add up two vectors that aren't of equal length, R will just recycle the shorter one as often as necessary, and warn you if the shorter one doesn't fit in the longer one a whole number of times:
+
+```{r Recycling vectors.}
+## illustrating how R adds up vectors that aren't of equal length
+my_num_1 + 8
+
+my_num_2 + c(1, 6)
+```
+
+Many of R's built-in functions also work on whole vectors at once, such as `log()` and `substr()` and `sum()`:
+
+```{r Built-in functions that work on vectors.}
+## illustrating how many of R's functions are vectorised
+log(my_num_1)
+substr(c("dog", "reindeer", "mite"), start = 1, stop = 2)
+sum(my_num_2)
+```
+
+This is important, as 'vectorised' operations in R are usually very fast, relative to working with individual items one at a time. But we'll get back to that later, particularly in Worksheet 4.
+
+#### Exercises
+
+For now, let's just practise using vectorised functions, while also integrating skills from the previous sections.
+
+(18) This code appears to produce the wrong result. Why? Can you fix it?
+
+```{r Exercise 18.}
+## fix this piece of code
+mean_of_items <- mean(4, 5, 6)
+mean_of_items
+
+#answer:
+mean_of_items <- mean(c(4, 5, 6))
+mean_of_items
+
+```
+
+(19) In `my_df`, we have two numeric columns: 'tastyness' and 'healthyness'. Write one line of code which adds a 'goodness' colummn which is the average of the other two. Hint: Think back to Chunk 39, and remember that a column in a data frame is just a vector; how do you add up two vectors item by item?
+
+```{r Exercise 19.}
+## add a third column to the 'my_df' data frame
+my_df
+my_df$cost <- NULL
+
+
+
+my_df$goodness <- (my_df$tastyness + my_df$healthyness) / 2
+my_df
+
+```
+
+\newpage
+### Putting It All Together
+
+(20) Create a data frame with 6 columns and 6 rows, where none of the contents are factors. From left to right, the columns should contain:
+
+* the numbers 1:6, in that order, from top to bottom
+* 6 random draws from a uniform distribution ranging from 1 to 10
+* the first two columns multiplied together
+* items one to three of the first column, then one to three of the second
+* for each row, `TRUE` if column 2 is higher than column 1, `FALSE` otherwise
+* 6 strings that would *not* be valid object names
+
+```{r Exercise 20.}
+## create the data frame described above
+testdf <- data.frame(one = c(1:6))
+testdf$two <-runif(6, 1, 10)
+testdf$three <- testdf$one * testdf$two
+testdf$four <- c(testdf$one[1:3], testdf$two[1:3])
+testdf$five <- testdf$one < testdf$two
+testdf$six <- c("12","1edag", "_score", "dag,uur", "naam:", "/score")
+testdf
+
+
+
+
+```
+
+
+### Skills & Further Resources
+
+This worksheet has introduced the basics of the R language.
+
+After working through it, you should be able to:
+
+1. use the console as a calculator
+2. store objects in R's workspace
+3. comment out bits of code using #
+4. describe valid object names
+5. list and manipulate the contents of R's workspace
+6. call functions with the correct arguments
+7. get help on functions built into R
+8. create vectors, lists and data frames
+9. explain when to use each type of data structure
+10. predict the effect of using c() on items of different types
+11. subset data structures using indexes and [], [[]], and $
+12. adjust and extend the contents of data structures
+13. explain the concept of R's 'factor' type
+14. explain what a 'vectorised' function is
+
+If you want a bit more information on some of these topics, I recommend:
+
+* skills 1 - 6 & 12:
+    + §1.1 - §1.5 & §1.7 in 'An Introduction to R'
+    + http://www.rochester.edu/college/psc/thestarlab/help/rcourse.pdf
+    + by Brenton Kenkel, University of Rochester
+
+* skills 7 - 11:
+    + §1.1 & §1.2 in 'Introduction to R'
+    + https://ramnathv.github.io/pycon2014-r/#
+    + by Ramnath Vaidyanathan, McGill University
+
+\newpage 
+### Overview of New R Functions & Operators
+
+R code           | does what
+---------------- | ---------------------------------------------
+x `<-` y         | assign y to object x
+`[x, y]`         | return a sublist of row(s) x and column(s) y
+`[[x]]`          | return the item at index x
+`?x`             | get help on a function with name x
+`$x`             | return the item with name x
+`["x"]`          | return the item with name x
+`c()`            | create or concatenate atomic vectors
+`as.character()` | convert to character
+`class()`        | return the type of an object
+`data.frame()`   | create a data frame
+`is.data.frame()`| check whether an object is a data frame
+`is.list()`      | check whether an object is a list
+`is.vector()`    | check whether an object is a vector
+`list()`         | create a list
+`log()`          | get a logarithm
+`ls()`           | list the contents of the workspace
+`mean()`         | get the mean
+`paste()`        | paste together strings
+`rm()`           | remove x from the workspace
+`rnorm()`        | get a random draw from a normal distribution
+`round()`        | round off the number x
+`substr()`       | get a substring
+`sum()`          | add values together
+`summary()`      | produce a summary of an object
+`toupper()`      | convert a character to upper case

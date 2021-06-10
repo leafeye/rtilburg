@@ -1,0 +1,732 @@
+
+## Research Skills: Programming with R
+
+## Worksheet 2
+
+Welcome to Worksheet 2. Last week we looked at the basics of the R language. This week, we're going to focus on transforming data: renaming it, filtering it, summarizing it, etcetera. Along the way, we'll learn how to setup an 'RStudio project', and how to install packages. Let's get started!
+
+### Reading in Data & Setting up an RStudio Project
+
+From this class onwards, we'll always be working with real, external data sets. For this week, that's `houses.txt`, a data set describing thousands of houses in Ames, Iowa, that were sold between 2006 and 2010. It lists both their characteristics, such as size and condition, and their sale price.
+
+To work with 'houses.txt' in R, we'll need to read it into R's workspace. We can do that using the function `read.delim()`, but we have tell it exactly where to look for the `houses.txt` file. In other words, we have to specify the correct *path*. For example, on my machine, this will work:
+
+```{r Reading in data.}
+## reading in the data - example path for my machine
+houses <- read.delim("~/Dropbox/Gitbucket/Course/input/houses.txt",
+  stringsAsFactors = FALSE)
+```
+
+However, on *your* machine, this will almost certainly produce an error, unless we happen to have eerily similar names and folders. To avoid this problem, let's set up an 'RStudio Project' and make use of *relative paths*. We'll discuss what that means in a minute. First, let's just do it.
+
+1. Outside of RStudio, create a folder for this course, and create two subfolders within it: `src` and `input`.
+
+2. Move `Worksheet_1.Rmd` and `Worksheet_2.Rmd` into the `src` subfolder; download `houses.txt` from Blackboard and save it inside the `input` subfolder.
+
+Now, after the next step, RStudio will appear to re-start. Afterwards, just go to File > Open File, select `Worksheet_2.Rmd`, and continue below.
+
+3. In RStudio, use File > New Project, choose 'Existing Directory', and then select the course folder you've just created.
+
+What's happened is that we've created a `.Rproj` file, which you can see in the **Files** tab to the right. From now on, you can use File > Open Project to select this `.Rproj` file, and RStudio will automatically re-open all the files you had open the last time you worked on this RStudio project.
+
+More importantly, opening a `.Rproj` file will also set your 'working directory' to its current location. That means that, whenever RStudio looks for a file, this is where it looks, and you only have to specify a path *relative* to there. This makes it much easier to share code; now this should work:
+
+```{r Relative path to houses.txt.}
+## reading in 'houses' using a relative path
+houses <- read.delim("houses.txt", stringsAsFactors = FALSE)
+
+## note: see the "Sidebar: Factors" section of Worksheet 1 for a reminder
+## concerning the 'stringsAsFactors = FALSE' argument
+```
+
+Going forward, this course will assume that you've followed the steps above, and that you place all new code inside the `src` subfolder and all new data sets inside the `input` subfolder. Overall, this will save a lot of hassle, and make it much easier to work with real data sets.
+
+### Getting an Overview of a Data Set
+
+Now that we've successfully loaded the `houses` data set, let's see if we can get a feel for what it contains. Even though it is not very large by data science standards, just typing its name at the console will still produce a somewhat overwhelming amount of information. Try it if you like:
+
+```{r Printing entire data set., eval = FALSE}
+## printing the entire 'houses' data set to the screen
+houses
+```
+
+Instead, R offers a few functions that describe a data set without printing it to the screen in its entirety. There's `head()` and `tail()`, which show the first and last five lines; `str()` which provides an overview of the structure of an object, and `dim()` which gives the number of rows and columns.
+
+The use of `dim()` is demonstrated in the code chunk below; it's probably best to type the others directly at the console one by one, as they're still going to print quite a bit of information. For more information on each of the variables, you can refer to the file `AmesDoc.txt` which is also on Blackboard.
+
+```{r Printing data dimensions., eval = FALSE}
+## print the dimensions of the 'houses' data set 
+dim(houses)
+```
+
+As another option, in RStudio, you can type `View(name_of_object)` to see a spread-sheet like representation of the data set. Try it now:
+
+```{r Viewing entire data set., eval = FALSE}
+## View the 'houses' data set 
+View(houses)
+```
+
+### Transforming Data in Base R
+
+A major part of working with data is getting it in the form most useful for further analysis. This often means discarding irrelevant variables, computing new variables, and filtering out certain observations.
+
+If our data is already mostly in the right shape - in a 'tidy' data frame, as we will discuss in Worksheet 5 - then each observation will be a row of the data frame, and each variable will be one of the columns.
+
+Thus, we've already seen some basic data transformation last week, in the 'Subsetting' section. Can you...
+
+(1) Discard irrelevant variables: Remove the `Order` column from the `houses` object below. 
+
+```{r Exercise 1. Remove a column., eval = TRUE}
+## remove the 'order' column from 'houses'
+houses$Order <- NULL
+```
+
+(2) Compute new variables: Add a new column, `Tot.Full.Bath`, to `houses`, which sums up the bathrooms in the basement (`Bsmt.Full.Bath`) and the bathrooms above ground (`Full.Bath`).
+
+```{r Exercise 2. Add a column., eval = FALSE}
+## add a 'Tot.Full.Bath' column to the 'houses' object
+houses$Tot.Full.Bath <- houses$Bsmt.Full.Bath + houses$Full.Bath
+
+## answer check: houses$Tot.Full.Bath[1] should be 2,
+houses$Tot.Full.Bath[1]
+## houses$Tot.Full.Bath[2] should be 1
+houses$Tot.Full.Bath[2]
+```
+
+(3) Filter out observations: Create a new object, `two_houses`, which contains only the first two rows of the `houses` data set.
+
+```{r Exercise 3. Filter two rows., eval = FALSE}
+## subset the first two rows of the 'houses' object
+two_houses <- houses[1:2,]
+## answer check: dim(two_houses) should produce 2 82 as the answer
+dim(two_houses)
+```
+
+\newpage
+But what about selecting particular rows based on their *properties*, instead of just their index? One way to do that is by putting relational and logical operators inside the subsetting brackets `[ , ]`. Then R will return all the rows or columns where that operation resolves to `TRUE`.
+
+* `>`: greater than
+* `>=`: greater than or equal to
+* `<`: less than
+* `<=`: less than or equal to
+* `==`: equal to
+* `!=`: not equal to
+* `!`: not
+* `&`: and
+* `|`: or
+
+For instance, the code chunk below stores all houses with more than 1200 square feet of "Above Grade Living Area" in a new object called `small_houses`. Note the use of `[ , ]`: By putting the `houses$Gr.Liv.Area < 1200` before the comma, we're getting all **rows** where `houses$Gr.Liv.Area < 1200` is `TRUE`.
+
+```{r Subsetting small houses.}
+## subsetting all houses with less than 1200 sq ft of living area
+small_houses <- houses[houses$Gr.Liv.Area < 1200, ]
+```
+
+If you forget the comma, or put your comparison after it, you're instructing R to return all the columns with `houses$Gr.Liv.Area < 1200`, which just doesn't make sense, so that will return an error:
+
+```{r Subsetting columns incorrectly., error = TRUE}
+## subsetting all columns (!?) with less than 1200 sq ft of living area
+small_houses_err <- houses[houses$Gr.Liv.Area < 1200]
+```
+
+However, note that you can, in principle, subset columns in the same way. For instance, the code chunk below stores all the columns with names that are at most 5 characters long in a new object called `short_cols`:
+
+```{r Subsetting columns with short names.}
+## subset all columns with names 5 characters long or less
+short_cols <- houses[ , nchar(names(houses)) <= 5]
+head(short_cols)
+```
+
+(4) In each case, we've been taking subsets of `houses`. What do you think R will return if you don't use the `houses[ , ]` notation? I.e., what will be the result of the code chunk below?
+
+```{r Exercise 4. Comparison without subsetting., eval = FALSE}
+## what type of object will `short_cols_t1` be?
+short_cols_t1 <- nchar(names(houses)) <= 5
+#creates value with list of booleans
+```
+
+Of course, you can also use relational and logical operators together, or subset rows and columns at once. See the code chunks below for examples. Remember to use `head(name_of_object)` just to see the first five rows, or `dim(name_of_object)` to see how many rows and columns you've got left.
+
+\newpage
+```{r Selecting by multiple criteria.}
+## selecting all houses with detached garages of at least 600 sq ft
+luxury_garages <- houses[houses$Garage.Type == "Detchd" &
+    houses$Garage.Area >= 600, ]
+
+## selecting all houses that have more basement bathrooms
+spooky_bathrooms <- houses[houses$Bsmt.Full.Bath > houses$Full.Bath, ]
+
+## selecting all houses built before 1900, storing only the basement columns
+old_basements <- houses[houses$Year.Built < 1900,
+  grepl("Bsmt", names(houses))]
+```
+
+Note the use of `grepl` in the last example: This function checks whether its first argument is a substring of its second argument. It's vectorised, so it is applied to all the elements of its second argument at once - in this case, it returns `TRUE` for all the columns where "Bsmt" is part of the name.
+
+Finally, let's discuss two special R operators that are particularly helpful when transforming data frames: `:` and `%in%`. You can use `:` to generate a range of numbers; it's equivalent to using the function `seq()` with `by = 1`. This is helpful when you want, say, the first ten rows of a data frame:
+
+```{r Selecting with ranges.}
+## demonstrating the use of `:`
+1:10
+
+## selecting the first ten rows of houses
+a_few_houses <- houses[1:10, ]
+a_few_houses
+```
+
+The operator `%in%`, on the other hand, returns `TRUE` at all the indexes where it's left input is in its right input. This is often useful when you're trying to get all the data that matches one of a few possible options:
+
+```{r Selecting with %in%.}
+## demonstrating the use of `%in%`
+c("apple", "pear", "banana") %in% c("apple", "pear")
+
+## selecting all houses that have (asbestos, asphalt, or wood) shingles
+with_shingles_1 <- houses[houses$Exterior.1st %in%
+    c("AsbShng", "AsphShn", "WdShing"), ]
+
+## this is equivalent to the following:
+with_shingles_2 <- houses[houses$Exterior.1st == "AsbShng" |
+   houses$Exterior.1st == "AsphShn" | houses$Exterior.1st == "WdShing", ]
+```
+
+#### Exercises
+(5) Create a new object that contains only houses that have exactly two kitchens of good quality.
+
+```{r Exercise 5. Two kitchens of good quality., eval = FALSE}
+## subset all houses that have exactly two kitchens of good quality
+a_few_good_kitchens <- houses[houses$Kitchen.Qual == "Gd" &
+    houses$Kitchen.AbvGr == 2, ]
+
+dim(a_few_good_kitchens)
+## answer check: dim(your_new_object) should produce 5 81
+```
+
+(6) This code chunk gives an error. Why? Add your answer in a comment.
+
+```{r Exercise 6. Trace the error., eval = FALSE}
+## why does this give an error?
+houses_2010 <- houses[houses$Year.Built = 2010, ]
+
+#it should use double = : ==
+houses_2010 <- houses[houses$Year.Built == 2010, ]
+
+```
+
+(7) Create a new object that consists of just the columns 59 - 65, i.e., those relating to garages.
+
+```{r Exercise 7. Select garage columns., eval = FALSE}
+## create a new object consisting of just the garage-related columns
+garage_object <- houses[,59:65]
+## answer check: dim(your_new_object) should produce 2930 7
+```
+
+### Installing Packages
+
+So far, we have only been using 'base R' - R's core set of operators and functions. But as discussed in Class 1, part of what's great about R is that other contributors have released lots of packages that add in extra functionality - and these packages are very easy to install.
+
+There are some packages that R automatically comes with, and that are always loaded. In RStudio, if you go to the **Packages** tab, you'll see an overview of these, including `datasets` and `methods`. If you use R's help on a function, the very top of the page will show you what package it's in.
+
+(8) For instance, what packages are the functions `sum()` and `rnorm()` from?
+
+```{r Exercise 8. Packages., eval = FALSE}
+## comment on where the packages 'sum()' and 'rnorm()' are from
+#sum() = is a base function
+#rnorm() is from the stats package
+```
+
+For data transformation, one of the best and most-used packages is `dplyr`, by Hadley Wickham. Let's install `dplyr` and load it.
+
+In RStudio, there's two ways to install packages: You can use the drop down menu under **Tools**, or type commands at the **Console**. In both cases, dependencies - other packages required by your chosen package - will also be installed automatically, which is usually what you want.
+
+To install packages from the console, all you have to do is type `install.packages("name_of_package")`:
+
+```{r Installing dplyr., eval = FALSE}
+## installing the 'dplyr' package from the Console
+install.packages("dplyr")
+```
+
+Now, we still have to load the package so that its functions are actually available. In RStudio, you can select a package under the **Packages** tab, or load it using `library("name_of package")`:
+
+```{r Loading dplyr., message = FALSE}
+## loading the 'dplyr' package from the Console
+library("dplyr")
+```
+
+### Using `dplyr`
+
+Now that we've successfully installed `dplyr`, let's see what it can do. The basic idea behind `dplyr` is that it makes data transformation easier, and often faster to execute, too.
+
+It has functions for all of the subsetting we've done so far: For rows, it uses `slice()` to select rows by index, and `filter()` to select them by criteria; for columns, it uses `select()` for both.
+
+So, for example, here are some of our earlier examples, now re-done in both 'base R' and `dplyr` language. The `dplyr` function `all_equal()` checks whether two data frames are functionally identical; see `?all_equal()`.
+
+```{r Examples with dplyr.}
+## selecting all houses with detached garages of at least 600 sq ft
+luxury_garages_baseR <- houses[houses$Garage.Type == "Detchd" &
+    houses$Garage.Area >= 600, ]
+luxury_garages_dplyr <- filter(houses, Garage.Type == "Detchd",
+  Garage.Area >= 600)
+all_equal(luxury_garages_baseR,luxury_garages_dplyr)
+
+## selecting the first ten rows of houses
+a_few_houses_baseR <- houses[1:10, ]
+a_few_houses_dplyr <- slice(houses, 1:10)
+all_equal(a_few_houses_baseR, a_few_houses_dplyr)
+
+## selecting only the basement columns
+basements_baseR <- houses[ , grepl("Bsmt", names(houses))]
+basements_dplyr <- select(houses, contains("Bsmt"))
+all_equal(basements_baseR, basements_dplyr)
+```
+
+Note the use of 'contains' in the last example: This is a special `dplyr` helper function for use with `select()`; as its name suggests, it allows you to select all columns whose name contains a specific string. There's a whole list of similar helper functions; you can use `?contains` to see them.
+
+You might be wondering, at this point, why it is useful to know two different ways of accomplishing exactly the same thing. We will return to that question in a minute. For now, let's just see how `dplyr` works.
+
+To make new variables, `dplyr` uses the `mutate()` function; it adds a new column based on existing ones. Here's an example, showing 'base R' first:
+
+```{r Adding columns with dplyr.}
+## creating a data frame containing just the garage columns
+garages <- select(houses, contains("Garage"))
+
+## using 'base R' to add a new column
+garages$baseR_Area.Per.Car <- garages$Garage.Area / garages$Garage.Cars
+  
+## using dplyr to add a new column
+garages <- mutate(garages, dplyr_Area.Per.Car = Garage.Area / Garage.Cars)
+```
+
+Like `select()`, you can use `mutate()` with dedicated `dplyr` helper functions, for instance, here's `ntile()`, which splits a continuous variable into discrete evenly-sized buckets, like so:
+
+```{r Mutate helper functions.}
+## splitting all garages into three size classes
+garages <- mutate(garages, Garage.Size = ntile(Garage.Area, 3))
+```
+
+To see everything offered by `dplyr`, I recommend the 'Data Transformation' cheatsheet, which in RStudio you can access using Help > Cheatsheets. The 'Subset Observations', 'Subset Variables' and 'Make New Variables' headings cover all the functionality discussed so far (with the rest still to come!).
+
+#### Exercises
+
+(9) The code chunk below shows some 'base R' subsetting operations. Add the equivalent `dplyr` solutions. Use the 'Data Transformation' cheatsheet mentioned above for help with `dplyr`.
+
+```{r Exercise 9. Equivalent dplyr subsetting.}
+## create the same objects using 'dplyr' instead of 'base R'
+
+## only the rows with beautiful houses
+beautiful_houses_baseR <- houses[houses$Overall.Qual >= 8 & 
+    houses$Overall.Cond >= 8, ]
+beatiful_houses_dplyr <- filter(houses, Overall.Qual >= 8 & Overall.Cond >= 8)
+all_equal(beautiful_houses_baseR, beatiful_houses_dplyr)
+
+## only the columns 1, 3, 4, 5, and 6
+column_subset_baseR <- houses[, c(1, 3:6)]
+column_subset_dplyr <- select(houses, c(1, 3:6))
+all_equal(column_subset_baseR, column_subset_dplyr)
+
+## only the rows with "WdShake" or "WdShngl" roofs
+wood_roofs_baseR <- houses[houses$Roof.Matl %in% c("WdShake", "WdShngl"), ]
+wood_roof_dplyr <- filter(houses, Roof.Matl %in% c("WdShake", "WdShngl"))
+all_equal(wood_roof_dplyr, wood_roofs_baseR)
+
+
+```
+
+(10) Now let's create some new variables using `dplyr`. Add the equivalent `Price.Area_dplyr` and `ModeratePrice_dplyr` columns to the `q10_houses` object created below; see the cheatsheet for help.
+
+```{r Exercise 10. Equivalent dplyr variable creation.}
+## create new columns using 'dplyr' instead of 'base R'
+## create a new object to avoid altering the original
+q10_houses <- houses
+
+## calculate the sale price per square foot of living area
+q10_houses$Price.Area_baseR <- q10_houses$SalePrice / q10_houses$Gr.Liv.Area
+q10_houses <- mutate(q10_houses, Price.Are_dplyr = SalePrice / Gr.Liv.Area )
+all.equal(q10_houses$Price.Area_baseR, q10_houses$Price.Are_dplyr)
+
+## calculate whether the house was sold for a moderate price or not
+q10_houses$ModeratePrice_baseR <- q10_houses$SalePrice >= 129500 &
+  q10_houses$SalePrice <= 213500
+q10_houses <- mutate(q10_houses, ModeratePrice_dplyr = SalePrice >= 129500 & SalePrice <= 213500)
+all.equal(q10_houses$ModeratePrice_baseR, q10_houses$ModeratePrice_dplyr)
+
+## create new columns equivalent to those above using 'dplyr'
+```
+
+### 'Not Available'
+
+Now that you've been working with the `houses` data set for a while, you've probably noticed that a lot of values seem to be `<NA>` or `NA`. This is a special R value indicating missing data; it stands for 'Not Available'.
+
+You can set values to `NA` using the regular assignment operator `<-`, but if you try to test if something is equal to NA using `==`, the result of that operation is `NA`, too. Instead, you have to use the function `is.na()`:
+
+```{r Investigating the `NA` value.}
+## setting an object to the value 'Not Available'
+an_object <- NA
+
+## directly testing if an object is 'NA' - is also 'NA'!
+an_object == NA
+
+## instead, to get a straight answer, use `is.na()`
+is.na(an_object)
+```
+
+(11) Now that you know about `is.na()`, create a new object that only includes houses that have basements.
+
+```{r Exercise 11. Use is.na()., eval = FALSE}
+##  create a new object that only contains houses with basements
+#only_basements <- filter(houses, is.na(houses$Bsmt.Qual))
+only_bassements <- houses[is.na(houses$Bsmt.Cond) == FALSE,]
+dim(only_bassements)
+## answer check: dim(your_new_object) should produce 2850 81
+```
+
+Note that 'base R' and `dplyr` also treat `NA`s differently: When you ask 'base R' to subset based on a condition, e.g., `houses[houses$Alley == "Pave", ]`, it $also$ returns all the rows where `Alley` is `NA` - after all, in principle, `NA` means the data is missing, so we don't know if the alley is paved or not. Conversely, `dplyr`'s `filter()` will $only$ return those rows where `Alley` really is equal to `"Pave"`, disregardering all `NA`s.
+
+```{r Subsetting with NAs, base R vs `dplyr`.}
+##  demonstration of how 'base R' treats NAs when subsetting
+dim(houses[houses$Alley == "Pave", ])
+
+##  demonstration of how `dplyr` treats NAs when subsetting
+dim(filter(houses, Alley == "Pave"))
+```
+
+### Using the Pipe Operator, %>%
+
+So far, our examples have consisted of one transformation step: All rows matching X, all columns matching Y, and so on. In practice, processing data is usually a sequential process. With the skills learned so far, that's a hassle: You keep having to calling a new function on the result of a previous function.
+
+For instance, let's say you wanted to create an new object focusing on pool-related information, while also adding a new column, `Pool.Rank`, ranking the relative size of the pool. Using a series of `dplyr` operations, including the `mutate()` helper `min_rank()`, this could be done as follows:
+
+```{r A series of transformation steps.}
+## filtering out only the houses with pools
+with_pools <- filter(houses, Pool.Area > 0)
+
+## selecting only relevant columns
+pool_columns <- select(with_pools, PID, Pool.Area, Pool.QC, Mo.Sold, 
+  Yr.Sold, SalePrice)
+
+## adding a new column ranking the pool size
+incl_pool_rank <- mutate(pool_columns, Pool.Rank = min_rank(Pool.Area))
+```
+
+However, this repeated creation of new objects is leaving both our workspace and our code a bit cluttered. The `dplyr` package improves this situation with the pipe operator, `%>%`. The `%>%` 'pipes' the result of one function to the next, where it automatically matches to the the first argument. Like so:
+
+```{r Equivalent processing using the pipe.}
+## creating an object using the %>% to 'chain' steps
+complete_pools <- houses %>%
+  filter(Pool.Area > 0) %>%
+  select(PID, Pool.Area, Pool.QC, Mo.Sold, Yr.Sold, SalePrice) %>%
+  mutate(Pool.Rank = min_rank(Pool.Area))
+```
+
+Using the `%>%` replaces the need to specify the first argument of the next function; the output of the previous function is automatically used instead. Thus, this code chunk and the previous one do exactly the same thing. In other words, you never *need* to use a pipe, but it often improves readability.
+
+The one thing to remember here is that the `%>%` has to come right after the output that you're 'piping'; it can't be on the start of the next line. This gives an '`unexpected SPECIAL`' error, as follows:
+
+```{r Pipes must be on new lines., eval = FALSE}
+## filtering out only the houses with pools
+better_dates <- houses %>%
+  mutate(Age.At.Sale = Yr.Sold - Year.Built)
+  %>% mutate(Date.Sold = paste0(Mo.Sold, "/", Yr.Sold))
+```
+
+#### Exercise
+(12) Re-write the example below so that it uses the `%>%` operator.
+
+```{r Exercise 12. Manipulating a data frame with a pipe.}
+## series of mutating operations
+main_details <- select(houses, PID, Lot.Area, Bldg.Type:Year.Built,
+  Mo.Sold, Yr.Sold, SalePrice)
+expensive_houses <- filter(main_details, SalePrice > 150000)
+ages_added <- mutate(expensive_houses, OLD_HOUSE = Year.Built < 1960)
+
+## create a piped version of the above
+piped_version <- houses %>%
+  select(PID, Lot.Area, Bldg.Type:Year.Built,
+  Mo.Sold, Yr.Sold, SalePrice) %>%
+  filter(SalePrice > 150000) %>%
+  mutate(OLD_HOUSE = Year.Built < 1960)
+
+all.equal(expensive_houses, piped_version)
+```
+
+\newpage
+(13) Re-create the following object using `dplyr` and the `%>%`.
+
+```{r Exercise 13. From base R to dplyr using the pipe.}
+## keep only the one family homes & drop the 'Bldg.Type' column
+one_family_baseR <- houses[houses$Bldg.Type == "1Fam",
+  names(houses) != "Bldg.Type"]
+###???
+## create a piped version of the above
+one_family_piped <- houses %>%
+  filter(Bldg.Type == "1Fam") %>%
+  select(-Bldg.Type)
+  
+all.equal(one_family_baseR, one_family_piped)
+##??
+```
+
+### Sidebar: `dplyr` vs 'base R'
+
+What's the point of learning data transformation with both `dplyr` and 'base R'? It must be said that `dplyr` has a number of advantages: Many people find the syntax easier to use and remember. It's often shorter to type. And `dplyr` completes many complex operations much, much faster.
+
+Accordingly, you should feel free to do everything in `dplyr` if you can. However, I still think it's important for new R programmers to have at least some idea of how to approach data manipulation problems in 'base R'.
+
+The gist of it is that `dplyr` is a very efficient tool for doing the type of things a data scientist most often wants to do. But if you need to solve a problem that `dplyr` doesn't handle, you'll probably need 'base R' subsetting to make it work. It's good to have that understanding to fall back on.
+
+For instance, for a problem that's difficult to solve with `dplyr`, take this earlier example, which selects all columns with short names. There's no `dplyr` helper function for `select()` that does this, and there's no easy workaround - but this is of course kind of a strange thing to want in the first place!
+
+```{r Example beyond dplyr.}
+## subset all columns with names 5 characters long or less
+short_cols <- houses[ , nchar(names(houses)) <= 5]
+```
+
+### More `dplyr`: Ordering, Summarizing and Renaming
+
+For now, let's investigate the rest of `dplyr`'s capabilities. We've focused on filtering and variable manipulation, but *sorting* and *summarising* are equally important, and *renaming* is useful too.
+
+To sort observations by the values of columns, `dplyr` offers `arrange()`. It takes as its arguments the data frame you wish to sort, and then as many columns as you wish to sort by, with each additional column serving as a "tiebreaker" for the previous one. For example:
+
+```{r Sorting with dplyr.}
+## sorting garages from old to new, and from small to large
+sorted_garages <- arrange(garages, Garage.Yr.Blt, Garage.Area)
+```
+
+This sorts the `garages` object from old to new, and, if there are any garages of equal age, those will further be sorted by size, from small to large.
+
+If you want to reverse the sort order, there's the helper function `desc()`:
+
+```{r Sorting in reverse.}
+## sorting garages from old to new, and from large to small
+sorted_garages <- arrange(garages, Garage.Yr.Blt, desc(Garage.Area))
+```
+
+(14) Create a copy of `houses` which is sorted by `Gr.Liv.Area`, then by `SalePrice`, and then by `Lot.Area`. The first item should be the largest, cheapest house on the most land, in that order of priority.
+
+```{r Exercise 14. Sorting., eval = FALSE}
+## create a sorted duplicate of the 'houses' object
+sorted_houses <- arrange(houses, desc(Gr.Liv.Area), SalePrice, desc(Lot.Area))
+
+## answer check: your_copy$PID[1:3] should list 908154235 908154195 908154205
+sorted_houses$PID[1:3]
+```
+
+To compute summaries of particular variables, `dplyr` offers the combination of `group_by()` and `summarise()`. Let's say, for instance, that you wanted to know whether there was a seasonal pattern to house sales. First, you'd tell R to group the `houses` data set by `Mo.Sold`:
+
+```{r Demonstrating group_by().}
+## grouping a data frame by month sold
+grouped_houses <- group_by(houses, Mo.Sold)
+```
+
+Then you'd call `summarise()`, which uses helper functions to compute summaries of variables. In this case, you might want to know the mean sales price, as well as the number of houses sold each month; the right helper functions for that are `mean()` and `n()`. (See the 'Data Transformation' cheatsheet!)
+
+```{r Demonstrating summarise().}
+## summarising sales per month
+sales_per_month <- summarise(grouped_houses, mean(SalePrice), n())
+sales_per_month
+```
+
+This produces a table where each row is one of the groups specified in `group_by()`; the first column contains the names of the groups, and the subsequent columns are the summaries computed with `summarise()`.
+
+(15) Does there seem to be any seasonal pattern to the number of sales, or the price that houses sell for?
+
+```{r Exercise 15. Seasonal patterns.}
+## comment on the (lack of) seasonal patterns in the house sales
+#In spring the prices seem to be somewhat lower
+#in the summer there are way more houses sold
+```
+
+What if we wanted to see, say, the mean sales price per building type, per year? Helpfully, we can `group_by()` both variables at once.
+
+And this time, we'll use a `%>%` to avoid creating an intermediate objects: We'll take the `houses` object, 'pipe' that to the `group_by()` function, and then piple directly onwards to `summarise()`. We'll also directly specify a name for our new summary column: `Mean.Price`.
+
+```{r Grouping based on two variables.}
+## adding a new grouping based on two variables &
+## summarising the mean sales prices
+types_per_year <- houses %>%
+  group_by(Bldg.Type, Yr.Sold) %>%
+  summarise(Mean.Price = mean(SalePrice))
+```
+
+```{r Looking at the summary., eval = FALSE}
+## looking at our new summary object
+types_per_year
+```
+
+You might also notice that all these tables look a bit different than the data frames we've seen so far: Their dimensions are printed at the top, as well as the type of data that's in each column.
+
+That's because `summarise()` produces a `tibble`, a special `dplyr` data structure. A tibble behaves mostly like a data frame, except that it prints a little nicer, and subsetting it always produces another tibble.
+
+A final bit of functionality that `dplyr` offers is easy variable renaming. In 'base R', the standard way to do it is to call up all the object's names, and then overwrite the specific one you're interested in. For instance, let's go back to our original `sales_per_month` object:
+
+```{r Renaming with base R.}
+## re-naming a column the base R way
+names(sales_per_month)[1] <- "Month"
+```
+
+Using `dplyr`, you can use the `rename()` function; it works like all the other `dplyr` functions, with `new_name = old_name` as its argument:
+
+```{r Renaming with dplyr.}
+## re-naming a column the 'dplyr' way
+sales_per_month <- rename(sales_per_month, Mean.Price = `mean(SalePrice)`,
+  Num.Sales = `n()`)
+```
+
+Note the use of the backticks in this example; they're necessary because the old column names aren't valid R object names (they contain punctuation marks other than underscores and periods).
+
+#### Exercises
+
+(16) Compute the average, minimum, and maximum number of rooms per building type.
+
+```{r Exercise 16. Computing summaries., eval = FALSE}
+## compute summary information per building type
+rooms_per_type <- houses %>%
+  group_by(Bldg.Type) %>%
+  summarise(Avg_rooms = mean(TotRms.AbvGrd), min_rooms = min(TotRms.AbvGrd), max_rooms = max(TotRms.AbvGrd))
+
+## answer check: for one family homes, the mean number of rooms
+## 6.5, the minimum 2, and the maximum 15
+rooms_per_type
+```
+
+(17) Compute the total number of houses for each combination of `Bedroom.AbvGr` and `Full.Bath`.
+
+```{r Exercise 17. More summaries., eval = FALSE}
+## compute summary information per bedroom / bath combination
+bed_bath <- houses %>%
+  group_by(Bedroom.AbvGr, Full.Bath) %>%
+  summarise(total = n())
+
+## answer check: there are 311 homes with 2 bedrooms and 2 bathrooms
+bed_bath
+```
+
+(18) Sort the existing `old_basements` object by total basement size (`Total.Bsmt.SF`), high to low, and then unfinished basement size (`Bsmt.Unf.SF`), low to high.
+
+```{r Exercise 18. Sorting basements., eval = FALSE}
+## sort the `old_basements` object by the size of its basements
+old_basements <- arrange(old_basements, desc(Total.Bsmt.SF), Bsmt.Unf.SF)
+## answer check: old_basements$Total.Bsmt.SF[1:3] should list 1470 1313 1240
+old_basements$Total.Bsmt.SF[1:3]
+```
+
+(19) Create a copy of the `houses` data set where the `SalePrice` column is called `Sale.Price` instead; right now the inconsistency is awkward!
+
+```{r Exercise 19. Renaming SalePrice, eval = FALSE}
+## create a new object with a more consistently named 'SalePrice' column
+houses_rename <- rename(houses, Sale.Price = `SalePrice`)
+```
+
+\newpage
+### Putting It All Together
+
+The 2013 edition of the 'Field Guide to American Houses' included, for the first time, the category of the "Millennium Mansion". Often derogatively called "McMansions", these are large, asymmetrical, modern houses; there are some pictures of typical examples in the 'McMansions.pdf' file on Blackboard. The website www.mcmansionhell.com lists the following criteria for a "McMansion":
+
+* 3000+ square feet
+* 5 or more bedrooms 
+* 3 or more full bathrooms
+* complex high pitched roof with lower cross gables or hips
+* tall (1.5-2 story) entry features, often arched
+* haphazardly applied dormers
+* multiple wall cladding materials applied to single surfaces
+* windows of differing sizes and shapes, often arched
+* structure is commonly asymmetrical with tall vertical appearance
+* attached 2 or 3 car garage
+* front facade sometimes will feature a multiple-story window
+* house is often out of scale with the lot it was built on
+
+(20) Many of these features can be matched to variables in our data set. Create a new data set, `millennium_mansions`, that contains the 5 houses most likely to be "McMansions". Sort it from most to least "McMansion-like", and note down the `PID` of the top candidate. Enter that into this week's survey, and I will present pictures of some of the corresponding homes in class.
+
+```{r Exercise 20. Putting it all together., eval = FALSE}
+## find the top 5 McMansions!
+millennium_mansions <- houses %>%
+  filter(Lot.Area >= 3000, 
+         Bedroom.AbvGr >= 5, 
+         Full.Bath >= 3, 
+         Roof.Style == "Gable" | Roof.Style == "Hip",
+         House.Style != "1Story",
+         Exterior.2nd != "niks",
+         Garage.Cars >= 2,
+         Year.Built > 1980,
+         ) %>%
+  arrange(desc(Bedroom.AbvGr)) %>%
+  select(contains('PID'))
+  
+millennium_mansions
+
+```
+
+
+### Summary & Further Resources
+
+This worksheet has introduced RStudio, data transformation and the installation of packages in R.
+
+After working through it, you should be able to:
+
+1. install and load packages using `install.packages()` or RStudio
+2. inspect a data frame using `head()`, `tail()`, `str()` and `dim()`
+3. subset a data frame using base R's logical & relational operators
+4. subset a data frame using `dplyr`'s `slice()`, `filter()`, and `select()`
+5. add new variables to a data.frame using `dplyr`'s `mutate()`
+6. use the '%>%' to improve the readability of code
+7. explain the meaning of R's `NA` value
+8. find all `dplyr`'s helper functions on the 'Data Transformation' cheat sheet
+9. summarise data frames using `group_by()` and `summarise()`
+10. sort data frames using `arrange()`
+11. re-name data frame variables using `names()` and `rename()`
+
+\newpage
+If you want a bit more information on some of these topics, I recommend:
+
+* skill 1:
+    + §1.4.3 in 'R for Data Science'
+    + http://r4ds.had.co.nz
+    + by Garrett Grolemund & Hadley Wickham
+
+* skill 2:
+    + §3.1.1 - §3.1.2 in 'An Introduction to R'
+    + http://www.rochester.edu/college/psc/thestarlab/help/rcourse.pdf
+    + by Brenton Kenkel, University of Rochester
+
+* skill 3 & 7:
+    + 'Subsetting Data' & 'Missing Values'
+    + https://stats.idre.ucla.edu/r/modules/subsetting-data/
+    + https://stats.idre.ucla.edu/r/faq/how-does-r-handle-missing-values/
+    + by the Statistical Computing Group, UCLA.
+
+* skills 4 - 6 & 8 - 11:
+    + §5.1 - §5.6 & §10 in 'R for Data Science'
+    + see above
+
+### Overview of New R Functions & Operators
+
+R code               | does what
+-------------------- | ----------------------------------------------------
+`%>%`*               | 'pipe' a result forwards
+`x %in% y`           | returns TRUE for each item of x in y
+`all.equal()`        | check if two data frames are equal
+`arrange()`*         | sort a data frame using helper functions
+`contains()`*        | helper function; check for name contents 
+`desc()`*            | helper function; sort in descending order
+`dim()`              | see the number of rows and columns of a data frame
+`filter()`           | subset rows of an object by condition
+`grepl()`            | check for substrings
+`group_by()`*        | add grouping information to a data frame
+`head()`             | see first five lines of a data frame
+`install.packages()` | install an R package
+`is.na()`            | check if a value is NA ('Not Available')
+`library()`          | load an R package
+`min_rank()`*        | helper function; rank instances
+`mutate()`*          | add new variables to a data frame
+`names()`            | return the (column, item) names of an object
+`n()`*               | helper function; count number of instances
+`nchar()`            | count the length of a string
+`ntile()`*           | helper function; split a variable into discrete bins
+`read.delim()`       | read in a file with separated variables
+`rename()`*          | rename variables
+`select()`*          | subset variables using helper functions
+`slice()`*           | subset rows of an object by index
+`str()`              | see an overview of the structure of an object
+`summarise()`*       | summarise a data frame after `group_by()`
+`tail()`             | see last five lines of a data frame
+
+*`dplyr` functions
